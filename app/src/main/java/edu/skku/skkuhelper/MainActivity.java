@@ -1,5 +1,6 @@
 package edu.skku.skkuhelper;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -17,11 +18,14 @@ import edu.skku.skkuhelper.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
+    private String id,pwd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,26 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        /************* Example of Background Service *************/
+        Button btn = findViewById(R.id.testBtn);
+        /* service start */
+        Intent startIntent = new Intent(this, BackgroundService.class);
+        id="testId";
+        pwd="testPwd";
+        startIntent.putExtra("id",id);
+        startIntent.putExtra("pwd",pwd);
+        startService(startIntent);
+        /* service terminate */
+        btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
+                stopService(intent);
+            }
+        });
+        /************* Example of Background Service *************/
+
     }
 
     @Override
