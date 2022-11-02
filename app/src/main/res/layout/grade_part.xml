@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/textViewType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="강의/과제 제목: "
+        app:layout_constraintBottom_toTopOf="@id/textViewHigh"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewHigh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="최고/최저: 20점/100점"
+        app:layout_constraintBottom_toTopOf="@id/textViewMid"
+        app:layout_constraintStart_toStartOf="@id/textViewType"
+        app:layout_constraintTop_toBottomOf="@id/textViewHigh"/>
+
+    <TextView
+        android:id="@+id/textViewMid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="평균/중간값: 55점/65점"
+        app:layout_constraintStart_toStartOf="@id/textViewHigh"
+        app:layout_constraintTop_toBottomOf="@id/textViewHigh"
+        app:layout_constraintBottom_toTopOf="@id/textViewMy"
+        />
+    <TextView
+        android:id="@+id/textViewMy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="본인점수 / 전체점수: 50점 / 100점"
+        app:layout_constraintBottom_toBottomOf="@id/textViewMid"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
