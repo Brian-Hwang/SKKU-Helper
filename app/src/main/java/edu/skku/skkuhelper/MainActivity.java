@@ -45,9 +45,24 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity implements APIStatusDelegate, ErrorDelegate {
-
+    public static final String EXT_Token = "token";
+    private String id,pwd;
     /************* Canvas API GLOBAL Variables *************/
     public final static String DOMAIN = "https://canvas.skku.edu/";
     public final static String TOKEN = "i8NCRKu4HN55HJ9bTdPoziLUybwKS1xYBtlA5dyzwHtXPI8kWPlrcHOZkMlMnfMP";
@@ -57,32 +72,28 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
     CanvasCallback<Course[]> courseCanvasCallback;
     CanvasCallback<ToDo[]> todoCanvasCallback;
     String nextURL = "";
-    ScrollView scrollView;
-    Button loadNextURLButton;
-    TextView output;
-    /************* Canvas API GLOBAL Variables *************/
-
     private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
-    private String id,pwd;
+    String output;
+    /************* Canvas API GLOBAL Variables *************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        Button btnLogin = findViewById(R.id.buttonLogin);
+        EditText editTextToken = findViewById(R.id.editTextPassword);
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //로그인 성공하여 메인페이지로 이동
+                String token = editTextToken.getText().toString();
+                Intent intent = new Intent(MainActivity.this, Home_page.class);
+                startActivity(intent);
+            }
+        });
 
-//        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-//        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        /************* Canvas API Local Variables *************/
-        output = findViewById(R.id.output);
-        loadNextURLButton = findViewById(R.id.loadNextPage);
-        scrollView = findViewById(R.id.scrollview);
-        /************* Canvas API Local Variables *************/
-
-        /************* Canvas API CREATE *************/
+        /************* Canvas API CREATE START *************/
         //Set up CanvasAPI
         setUpCanvasAPI();
 
@@ -177,54 +188,42 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
             }
 
         };
-        //If they press the button, make an API call.
-        loadNextURLButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                makeAPICall();
-            }
-        });
 
         //Make the actual API call.
         makeAPICall();
 
-        /************* Canvas API CREATE *************/
+        /************* Canvas API CREATE END*************/
 
-
-        /************* Channel creation for Notification *************/
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        {
-            CharSequence name = getString(R.string.channel_name);
-            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(String.valueOf(R.string.CHANNEL_ID), name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-        /************* Channel creation for Notification *************/
+        /************* Channel creation for Notification START *************/
+        CharSequence name = getString(R.string.channel_name);
+        String description = getString(R.string.channel_description);
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel channel = new NotificationChannel(String.valueOf(R.string.CHANNEL_ID), name, importance);
+        channel.setDescription(description);
+        // Register the channel with the system; you can't change the importance
+        // or other notification behaviors after this
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
+        /************* Channel creation for Notification END *************/
 
 
         /************* Example of Background Service *************/
-//        Button btn = findViewById(R.id.testBtn);
-//        /* service start */
-//        Intent startIntent = new Intent(this, BackgroundService.class);
-//        id="testId";
-//        pwd="testPwd";
-//        startIntent.putExtra("id",id);
-//        startIntent.putExtra("pwd",pwd);
-//        startService(startIntent);
-//        /* service terminate */
-//        btn.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
-//                stopService(intent);
-//            }
-//        });
+        /* service start */
+        Intent startIntent = new Intent(this, BackgroundService.class);
+        id="testId";
+        pwd="testPwd";
+        startIntent.putExtra("id",id);
+        startIntent.putExtra("pwd",pwd);
+        startService(startIntent);
+        /* service terminate */
+        /* how to quit background service */
+        /*testBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
+                stopService(intent);
+            }
+        });*/
         /************* Example of Background Service *************/
 
         /************* Notification builder creation for Notification *************/
@@ -244,49 +243,19 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
 
 
         /************* Example of Notification *************/
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        NotificationManagerCompat notificationManagercompat = NotificationManagerCompat.from(this);
         // notificationId is a unique int for each notification that you must define
-        notificationManager.notify(001, builder.build());
+        notificationManagercompat.notify(1, builder.build());
         /************* Example of Notification *************/
-
     }
+
     /**
      * Helper for making an API call.
      */
 
     public void makeAPICall() {
-        //Don't let them spam the button.
-        loadNextURLButton.setEnabled(false);
-
-        //Check if the first api call has come back.
-        if ("".equals(nextURL)) {
-            ToDoAPI.getUserTodos(todoCanvasCallback);
-            CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
-        }
-        //Check if we're at the end of the paginated list.
-        else if (nextURL != null) {
-            ToDoAPI.getUserTodos(todoCanvasCallback);
-            CourseAPI.getNextPageCourses(courseCanvasCallback,nextURL);
-//            ConversationAPI.getNextPageConversations(conversationCanvasCallback, nextURL);
-        }
-        //We are at the end of the list.
-        else {
-            Toast.makeText(getContext(), getString(R.string.noMoreItems), Toast.LENGTH_LONG).show();
-            loadNextURLButton.setEnabled(true);
-        }
-//        //Check if the first api call has come back.
-//        if ("".equals(nextURL)) {
-//            ConversationAPI.getFirstPageConversations(conversationCanvasCallback, ConversationAPI.ConversationScope.ALL);
-//        }
-//        //Check if we're at the end of the paginated list.
-//        else if (nextURL != null) {
-//            ConversationAPI.getNextPageConversations(conversationCanvasCallback, nextURL);
-//        }
-//        //We are at the end of the list.
-//        else {
-//            Toast.makeText(getContext(), getString(R.string.noMoreItems), Toast.LENGTH_LONG).show();
-//            loadNextURLButton.setEnabled(true);
-//        }
+        ToDoAPI.getUserTodos(todoCanvasCallback);
+        CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
     }
 
     /**
@@ -294,20 +263,12 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
      */
 
     public void appendToTextView(String text){
-        if(output == null){
-            output = (TextView)findViewById(R.id.output);
-        }
+//        if(output == null){
+//            output = (TextView)findViewById(R.id.output);
+//        }
 
-        String current = output.getText().toString();
-        output.setText(current + "\n" + text);
-
-        //Scroll to the bottom of the scrollview.
-        scrollView.post(new Runnable() {
-            @Override
-            public void run() {
-                scrollView.fullScroll(View.FOCUS_DOWN);
-            }
-        });
+        output = output + "\n" + text;
+        Log.d("Append",output);
     }
 
 
@@ -365,8 +326,6 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
 
         appendToTextView(SECTION_DIVIDER);
 
-        //Let them load another page now.
-        loadNextURLButton.setEnabled(true);
     }
 
     @Override

@@ -1,33 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:ignore="MergeRootFrame"
     tools:context=".MainActivity">
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        app:srcCompat="@mipmap/ic_launcher_round"
+        android:layout_marginTop="150dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <!--
+
+    <EditText
+        android:id="@+id/editTextId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/lightgreen"
+        android:layout_marginTop="60dp"
+        android:drawableLeft="@drawable/ic_baseline_person_24"
+        android:ems="13"
+        android:padding="10dp"
+        android:hint="ID"
+        android:inputType="textPersonName"
+        android:maxLength="10"
+        android:textColor="#ffffff"
+        android:textColorHint="#ffffff"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/lightgreen"
+        android:drawableLeft="@drawable/ic_baseline_https_24"
+        android:layout_marginTop="20dp"
+        android:ems="13"
+        android:hint="PASSWORD"
+        android:inputType="textPersonName"
+        android:maxLength="10"
+        android:padding="10dp"
+        android:textColor="#ffffff"
+        android:textColorHint="#ffffff"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextId" /> -->
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/lightgreen"
+        android:drawableLeft="@drawable/ic_baseline_https_24"
+        android:layout_marginTop="50dp"
+        android:ems="13"
+        android:hint="Token ID"
+        android:inputType="textPassword"
+        android:maxLength="10"
+        android:padding="13dp"
+        android:textColor="#ffffff"
+        android:textColorHint="#ffffff"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageView" />
+
+    <CheckBox
+        android:id="@+id/check"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:text="Automatically login"
+        app:layout_constraintStart_toStartOf="@+id/editTextPassword"
+        app:layout_constraintTop_toBottomOf="@+id/editTextPassword" />
+
     <Button
-        android:id="@+id/loadNextPage"
-        android:layout_width="fill_parent"
+        android:id="@+id/buttonLogin"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_margin="5dip"
-        android:enabled="false"
-        android:text="@string/loadNextPage" />
+        android:background="@color/green"
+        android:layout_marginTop="15dp"
+        android:text="Login"
+        app:backgroundTint="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/check" />
 
-    <ScrollView
-        android:id="@+id/scrollview"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/loadNextPage"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="10dip">
-
-        <TextView
-            android:id="@+id/output"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
-
-    </ScrollView>
-
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -18,6 +18,23 @@
             android:enabled="true"
             android:exported="true" />
 
+        <service
+            android:name=".BackgroundService"
+            android:enabled="true"
+            android:exported="true" />
+        <activity
+            android:name=".Home_page"
+            android:exported="false"
+            android:theme="@style/Theme.SKKUHelper.NoActionBar"/>
+        <activity
+            android:name=".NavigationMenu"
+            android:exported="false"
+            android:label="@string/title_activity_navigation_menu"
+            android:theme="@style/Theme.SKKUHelper.NoActionBar">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true"
