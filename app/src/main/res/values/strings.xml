@@ -15,5 +15,8 @@
     <string name="CHANNEL_ID">SKKU HELPER notification ID</string>
 
 
+    <string name="loadNextPage">Load Next Page</string>
+    <string name="noMoreItems">There are no more items</string>
+
 
 </resources>
