@@ -28,7 +28,7 @@
             android:layout_weight="1"
             android:layout_margin="2dp"
             android:background="@color/lightgreen"
-            android:text="Assignment"
+            android:text="UserAssignment"
             app:backgroundTint="@null"/>
     </LinearLayout>
     <LinearLayout
