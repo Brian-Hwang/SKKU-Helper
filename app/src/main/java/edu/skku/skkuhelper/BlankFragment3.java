@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -34,6 +35,8 @@ public class BlankFragment3 extends Fragment {
     //tag example
     String[] tagList = {"전체", "장학", "진로", "취업", "지원"};
     String tag = "전체";
+    String[] sortList = {"최신순", "조회순"};
+    String sort = "최신순";
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -80,26 +83,24 @@ public class BlankFragment3 extends Fragment {
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_blank3, container, false);
         listView = v.findViewById(R.id.listViewNotification);
-        Spinner spinner = v.findViewById(R.id.spinner);
-        ToggleButton btn = v.findViewById(R.id.alarmToggle2);
+        Spinner spinner2 = v.findViewById(R.id.spinner2);
+        Spinner spinner3 = v.findViewById(R.id.spinner3);
+        Button btn = v.findViewById(R.id.buttonApply);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_dropdown_item, tagList);
-        spinner.setAdapter(adapter);
+        spinner2.setAdapter(adapter);
+        ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_dropdown_item, sortList);
+        spinner3.setAdapter(adapter2);
 
 
         //example
         String sum = "This is summary!";
         String link = "https://www.skku.edu/skku/index.do";
+        String link2 = "https://icampus.skku.edu/";
         items = new ArrayList<Notice>();
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 tag = tagList[i];
-
-                items.add(new Notice("공지제목1", "글쓴이1", "2020-01-01", link, true, sum));
-                items.add(new Notice("공지제목2", "글쓴이2", "2021-01-01", link, true, sum));
-                items.add(new Notice("공지제목3", "글쓴이3", "2021-01-01", link, true, sum));
-                listViewAdapter = new ListViewAdapter_Notification(items, getActivity().getApplicationContext());
-                listView.setAdapter(listViewAdapter);
             }
 
             @Override
@@ -107,26 +108,28 @@ public class BlankFragment3 extends Fragment {
 
             }
         });
-        btn.setOnCheckedChangeListener(
-                new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                        //toggle 버튼이 on된 경우
-                        if(isChecked){
-                        }
-                        else{
-                        }
-
-                    }
-                }
-        );
-
-       /* listView.setOnItemClickListener (new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(Intent.ACTION_VIEW,Uri.parse(items.get(position).link));
-                getActivity().startActivity(intent);
+        spinner3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                sort = sortList[i];
             }
-        });*/
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //example
+                items.add(new Notice("공지제목1", "글쓴이1", "2020-01-01", link, true, sum));
+                items.add(new Notice("공지제목2", "글쓴이2", "2021-01-01", link2, true, sum));
+                items.add(new Notice("공지제목3", "글쓴이3", "2021-01-01", link, true, sum));
+                listViewAdapter = new ListViewAdapter_Notification(items, getActivity().getApplicationContext());
+                listView.setAdapter(listViewAdapter);
+            }
+        });
 
 
 

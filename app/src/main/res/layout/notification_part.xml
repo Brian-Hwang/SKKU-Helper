@@ -47,19 +47,10 @@
         app:backgroundTint="@null"
         android:textOff="open summary"
         android:textOn="close summary"
-        app:layout_constraintEnd_toStartOf="@id/buttonlink"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDate" />
-
-    <Button
-        android:id="@+id/buttonlink"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="go to the link"
-        android:background="@color/grey"
-        app:backgroundTint="@null"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/alarmToggle"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewDate" />
 
     <TextView

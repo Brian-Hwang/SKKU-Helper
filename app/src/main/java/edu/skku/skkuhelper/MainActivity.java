@@ -45,6 +45,7 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -59,6 +60,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 
 public class MainActivity extends AppCompatActivity {
     private String id,pwd;
@@ -71,16 +74,52 @@ public class MainActivity extends AppCompatActivity {
 
         Button btnLogin = findViewById(R.id.buttonLogin);
         EditText editTextToken = findViewById(R.id.editTextPassword);
+        CheckBox Auto_LogIn;
+        SharedPreferences setting;
+        SharedPreferences.Editor editor;
+        Auto_LogIn = (CheckBox) findViewById(R.id.check);
+        setting = getSharedPreferences("setting", 0);
+        editor= setting.edit();
+
+        /*if(setting.getBoolean("Auto_Login_enabled", true)){
+            //Auto_LogIn.setChecked(true);
+            Intent intent = new Intent(MainActivity.this, Home_page.class);
+            startActivity(intent);
+        }*/
+        if(setting.getString("TOKEN", null) != null) {
+            Intent intent = new Intent(MainActivity.this, Home_page.class);
+            startActivity(intent);
+        }
+
+
+        Auto_LogIn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // TODO Auto-generated method stub
+                if(isChecked){
+
+                    String TOKEN = editTextToken.getText().toString();
+                    editor.putString("TOKEN", TOKEN);
+                   // editor.putBoolean("Auto_Login_enabled", true);
+                    editor.commit();
+                }
+                else{
+                    editor.clear();
+                    editor.commit();
+                }
+            }
+        });
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //로그인 성공하여 메인페이지로 이동
+                //login success
                 String token = editTextToken.getText().toString();
                 Intent intent = new Intent(MainActivity.this, Home_page.class);
                 intent.putExtra("TOKEN",token);
                 startActivity(intent);
             }
         });
+       
 
 
         /************* Channel creation for Notification START *************/

@@ -69,23 +69,11 @@ public class ListViewAdapter_Notification extends BaseAdapter {
             TextView textViewDate = view.findViewById(R.id.textViewDate);
             TextView textViewSummary = view.findViewById(R.id.textViewSummary);
             ToggleButton btn1 = view.findViewById(R.id.alarmToggle);
-            Button btn2 = view.findViewById(R.id.buttonlink);
-
 
             textViewSummary.setVisibility(View.GONE);
             textViewTitle.setText(items.get(i).title);
             textViewName.setText(items.get(i).name);
             textViewDate.setText(items.get(i).date);
-
-            /*btn2.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //not work
-                    Intent intent = new Intent(Intent.ACTION_VIEW,Uri.parse(items.get(i).link));
-                    mContext.startActivity(intent);
-                }
-            });*/
-
 
             btn1.setOnCheckedChangeListener(
                     new CompoundButton.OnCheckedChangeListener() {
