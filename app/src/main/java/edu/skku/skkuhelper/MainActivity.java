@@ -113,15 +113,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //login success
-                if(editTextToken.getText().toString().equals("123")) {
-
-                }
-                else {
-                    String token = editTextToken.getText().toString();
-                    Intent intent = new Intent(MainActivity.this, Home_page.class);
-                    intent.putExtra("TOKEN",token);
-                    startActivity(intent);
-                }
+                String token = editTextToken.getText().toString();
+                Intent intent = new Intent(MainActivity.this, Home_page.class);
+                intent.putExtra("TOKEN",token);
+                startActivity(intent);
             }
         });
        
