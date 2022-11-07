@@ -17,7 +17,8 @@
             android:id="@+id/spinner"
             android:layout_centerHorizontal="true"
             android:layout_width="match_parent"
-            android:layout_height="50dp"/>
+            android:layout_height="50dp"
+            android:textAlignment="center"/>
 
     </LinearLayout>
     <LinearLayout
