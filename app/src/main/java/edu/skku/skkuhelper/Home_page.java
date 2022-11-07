@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.content.SharedPreferences;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 
@@ -49,6 +51,7 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 public class Home_page extends AppCompatActivity implements APIStatusDelegate, ErrorDelegate, NavigationView.OnNavigationItemSelectedListener {
+    private long time = 0;
     /************* Canvas API GLOBAL Variables *************/
     private AppBarConfiguration appBarConfiguration;
     public final static String DOMAIN = "https://canvas.skku.edu/";
@@ -155,11 +158,22 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
     @Override
     public void onBackPressed() {
+        Toast toast = Toast.makeText(getApplicationContext(),"뒤로 버튼을 한번 더 누르면 종료합니다.",Toast.LENGTH_SHORT);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
+        }
+        else {
+            //뒤로가기 두번 하면 종료
+            if (System.currentTimeMillis() > time + 2000) {
+                time = System.currentTimeMillis();
+                toast.show();
+                return;
+            }
+            if (System.currentTimeMillis() <= time + 2000) {
+                finishAffinity();
+                toast.cancel();
+            }
         }
     }
 /*
@@ -191,6 +205,10 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        SharedPreferences.Editor editor;
+        SharedPreferences setting;
+        setting = getSharedPreferences("setting", 0);
+        editor= setting.edit();
 
         FragmentManager manager = getSupportFragmentManager();
 
@@ -206,6 +224,9 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         }
         //logout
         else if (id == R.id.nav_logout) {
+            editor.clear();
+            editor.commit();
+            finishAffinity();
             /* erase user id, password.*/
             Intent intent = new Intent(Home_page.this, MainActivity.class);
             startActivity(intent);
