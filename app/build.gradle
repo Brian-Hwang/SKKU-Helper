@@ -14,6 +14,12 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
 
     buildTypes {
@@ -44,4 +50,8 @@ dependencies {
     api 'com.instructure:CanvasAPI:1.2.1@aar'
     api 'androidx.legacy:legacy-support-v13:1.0.0'
     api 'com.squareup.retrofit:retrofit:1.9.0'
+
+    def room_version = "2.4.3"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
 }

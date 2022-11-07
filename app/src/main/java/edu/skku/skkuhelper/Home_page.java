@@ -22,14 +22,11 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
-import com.instructure.canvasapi.api.AssignmentAPI;
 import com.instructure.canvasapi.api.CourseAPI;
 import com.instructure.canvasapi.api.ToDoAPI;
 import com.instructure.canvasapi.api.UserAPI;
 import com.instructure.canvasapi.model.Assignment;
-import com.instructure.canvasapi.model.CanvasContext;
 import com.instructure.canvasapi.model.CanvasError;
-import com.instructure.canvasapi.model.Conversation;
 import com.instructure.canvasapi.model.Course;
 import com.instructure.canvasapi.model.ToDo;
 import com.instructure.canvasapi.model.User;
@@ -44,9 +41,10 @@ import com.instructure.canvasapi.utilities.UserCallback;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Objects;
 
+import edu.skku.skkuhelper.roomdb.SKKUAssignment;
+import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
@@ -67,14 +65,20 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     String userName;
     /************* Canvas API GLOBAL Variables *************/
 
+    /************* Room DB GLOBAL Variables *************/
+    SKKUAssignmentDB SKKUAssignmentDB = null;
+    /************* Room DB GLOBAL Variables *************/
+
+
+    FragmentManager manager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_navigation_menu);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
+        Bundle bundle = getIntent().getExtras();
+        TOKEN = bundle.getString("TOKEN");
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -85,9 +89,13 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        FragmentManager manager = getSupportFragmentManager();
+        manager = getSupportFragmentManager();
         Objects.requireNonNull(getSupportActionBar()).setTitle("Lecture/Assignment");
-        manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
+
+        /************* Room DB CREATE START *************/
+        SKKUAssignmentDB = SKKUAssignmentDB.getInstance(this);
+        /************* Room DB CREATE END *************/
+
 
         /************* Canvas API CREATE START *************/
 
@@ -132,7 +140,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             public void firstPage(ToDo[] todos, LinkHeaders linkHeaders, Response response) {
                 for (ToDo todo : todos) {
                     Date today = new Date();
-
                     if(todo.getAssignment().getPointsPossible()==0.0f || todo.getAssignment().getDueDate().before(today))
                         continue;
                     todoClass todoTemp = new todoClass();
@@ -144,7 +151,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                     todoTemp.dueDate = todo.getDueDate();
                     todoTemp.url = todo.getHtmlUrl();
                     todolist.add(todoTemp);
-
                 }
             }
         };
@@ -288,9 +294,33 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
     @Override
     public void onCallbackFinished(CanvasCallback.SOURCE source) {
-        for(todoClass todos : todolist){
+        for(todoClass todos : todolist) {
             Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
+
+            class InsertRunnable implements Runnable {
+                @Override
+                public void run() {
+                    SKKUAssignment todoTemp = new SKKUAssignment();
+                    todoTemp.isLecture = todos.isLecture;
+                    todoTemp.assignmentName = todos.assignmentName;
+                    todoTemp.courseName = todos.courseName;
+                    todoTemp.assignmentId = todos.assignmentId;
+                    todoTemp.courseId = todos.courseId;
+                    todoTemp.dueDate = todos.dueDate;
+                    todoTemp.url = todos.url;
+                    SKKUAssignmentDB.SKKUassignmentDao().insert(todoTemp);
+                }
+            }
+
+            InsertRunnable insertRunnable = new InsertRunnable();
+            Thread addThread = new Thread(insertRunnable);
+            addThread.start();
+
         }
+
+
+        manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
+
     }
 
     @Override

@@ -1,11 +1,17 @@
-package edu.skku.skkuhelper;
+package edu.skku.skkuhelper.roomdb;
+
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 import java.util.Date;
 
-public class todoClass {
+@Entity
+public class SKKUAssignment {
+    @PrimaryKey(autoGenerate = false)
+    public long assignmentId;
+
     public String assignmentName;
     public String courseName;
-    public long assignmentId;
     public long courseId;
     public boolean isLecture;
     public Date dueDate;
