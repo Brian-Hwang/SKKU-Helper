@@ -45,6 +45,8 @@ import java.util.Objects;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
+import edu.skku.skkuhelper.roomdb.Userinfo;
+import edu.skku.skkuhelper.roomdb.UserinfoDB;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
@@ -66,7 +68,8 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     /************* Canvas API GLOBAL Variables *************/
 
     /************* Room DB GLOBAL Variables *************/
-    SKKUAssignmentDB SKKUAssignmentDB = null;
+    SKKUAssignmentDB SKKUassignmentDB = null;
+    UserinfoDB userinfoDB = null;
     /************* Room DB GLOBAL Variables *************/
 
 
@@ -93,7 +96,8 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         Objects.requireNonNull(getSupportActionBar()).setTitle("Lecture/Assignment");
 
         /************* Room DB CREATE START *************/
-        SKKUAssignmentDB = SKKUAssignmentDB.getInstance(this);
+        SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
+        userinfoDB = userinfoDB.getInstance(this);
         /************* Room DB CREATE END *************/
 
 
@@ -283,15 +287,28 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                     todoTemp.courseId = todos.courseId;
                     todoTemp.dueDate = todos.dueDate;
                     todoTemp.url = todos.url;
-                    SKKUAssignmentDB.SKKUassignmentDao().insert(todoTemp);
+                    SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
                 }
             }
 
             InsertRunnable insertRunnable = new InsertRunnable();
             Thread addThread = new Thread(insertRunnable);
             addThread.start();
-
         }
+        class InsertRunnable2 implements Runnable {
+            @Override
+            public void run() {
+                Userinfo userinfoTemp = new Userinfo();
+                userinfoTemp.userTOKEN = TOKEN;
+                userinfoTemp.userId = userId;
+                userinfoTemp.userName = userName;
+                userinfoDB.UserinfoDao().insert(userinfoTemp);
+            }
+        }
+        InsertRunnable2 insertRunnable2 = new InsertRunnable2();
+        Thread addThread2 = new Thread(insertRunnable2);
+        addThread2.start();
+
 
 
         manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
