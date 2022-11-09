@@ -81,13 +81,10 @@ public class MainActivity extends AppCompatActivity {
         setting = getSharedPreferences("setting", 0);
         editor= setting.edit();
 
-        /*if(setting.getBoolean("Auto_Login_enabled", true)){
-            //Auto_LogIn.setChecked(true);
+        if(setting.getString("TOKEN",null) != null) {
+            String token = editTextToken.getText().toString();
             Intent intent = new Intent(MainActivity.this, Home_page.class);
-            startActivity(intent);
-        }*/
-        if(setting.getString("TOKEN", null) != null) {
-            Intent intent = new Intent(MainActivity.this, Home_page.class);
+            intent.putExtra("TOKEN",token);
             startActivity(intent);
         }
 

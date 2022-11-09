@@ -152,6 +152,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                     todoTemp.url = todo.getHtmlUrl();
                     todolist.add(todoTemp);
                 }
+                Log.d("size confirm", todolist.size() + "");
             }
         };
 
@@ -182,29 +183,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             }
         }
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.navigation_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-    */
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -221,9 +199,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         if (id == R.id.nav_icampus) {
             getSupportActionBar().setTitle("Lecture/Assignment");
             manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
-        } else if (id == R.id.nav_grade) {
-            getSupportActionBar().setTitle("My Grade");
-            manager.beginTransaction().replace(R.id.content_main, new BlankFragment2()).commit();
         } else if (id == R.id.nav_notification) {
             getSupportActionBar().setTitle("Notification");
             manager.beginTransaction().replace(R.id.content_main, new BlankFragment3()).commit();
