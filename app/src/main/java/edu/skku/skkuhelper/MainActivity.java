@@ -7,25 +7,16 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.instructure.canvasapi.api.ConversationAPI;
-import com.instructure.canvasapi.api.CourseAPI;
-import com.instructure.canvasapi.api.ToDoAPI;
 import com.instructure.canvasapi.api.UserAPI;
 import com.instructure.canvasapi.model.CanvasError;
-import com.instructure.canvasapi.model.Conversation;
-import com.instructure.canvasapi.model.Course;
-import com.instructure.canvasapi.model.ToDo;
 import com.instructure.canvasapi.model.User;
 import com.instructure.canvasapi.utilities.APIHelpers;
 import com.instructure.canvasapi.utilities.APIStatusDelegate;
 import com.instructure.canvasapi.utilities.CanvasCallback;
 import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
-import com.instructure.canvasapi.utilities.LinkHeaders;
 import com.instructure.canvasapi.utilities.UserCallback;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,37 +26,19 @@ import android.view.View;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
+import androidx.room.Room;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
-import edu.skku.skkuhelper.roomdb.Userinfo;
-import edu.skku.skkuhelper.roomdb.UserinfoDB;
+import edu.skku.skkuhelper.roomdb.UserInfo;
+import edu.skku.skkuhelper.roomdb.UserInfoDB;
+import edu.skku.skkuhelper.roomdb.UserInfoDao;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.content.SharedPreferences;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Intent;
-import android.os.Build;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -83,19 +56,14 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
     public final static String DOMAIN = "https://canvas.skku.edu/";
     boolean isCallbackFinished = false;
     /************* Canvas API GLOBAL Variables *************/
-
     /************* Room DB GLOBAL Variables *************/
-    UserinfoDB userinfoDB = null;
+    UserInfoDB userinfoDB = null;
     /************* Room DB GLOBAL Variables *************/
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /************* Room DB CREATE START *************/
-        userinfoDB = userinfoDB.getInstance(this);
-        /************* Room DB CREATE END *************/
 
         btnLogin = findViewById(R.id.buttonLogin);
         editTextToken = findViewById(R.id.editTextPassword);
@@ -105,6 +73,13 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         Auto_LogIn = (CheckBox) findViewById(R.id.check);
         setting = getSharedPreferences("setting", 0);
         editor= setting.edit();
+
+        /************* Room DB CREATE START *************/
+        userinfoDB = UserInfoDB.getInstance(this);
+        UserInfoDB Infodb = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
+        UserInfoDao userinfoDao = Infodb.UserinfoDao();
+        /************* Room DB CREATE END *************/
+
         /************* Canvas API CREATE START *************/
 
 
@@ -121,6 +96,23 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
                 userId = user.getLoginId();
                 userName = user.getName();
 
+                class InsertRunnable2 implements Runnable {
+                    @Override
+                    public void run() {
+                        UserInfo userinfoTemp = new UserInfo();
+                        userinfoTemp.userTOKEN = TOKEN;
+                        userinfoTemp.userId = userId;
+                        userinfoTemp.userName = userName;
+                        userinfoDB.UserinfoDao().insert(userinfoTemp);
+                    }
+                }
+
+                InsertRunnable2 insertRunnable2 = new InsertRunnable2();
+                Thread addThread2 = new Thread(insertRunnable2);
+                addThread2.start();
+
+
+
                 //login success
                 Intent intent = new Intent(MainActivity.this, Home_page.class);
                 intent.putExtra("TOKEN", TOKEN);
@@ -132,6 +124,17 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         /************* Canvas API CREATE END*************/
 
         if(setting.getString("TOKEN",null) != null) {
+            class InsertRunnable implements Runnable {
+                @Override
+                public void run() {
+                    TOKEN = userinfoDao.getTOKEN();
+                    Log.d("TOKEN", TOKEN);
+
+                }
+            }
+            InsertRunnable insertRunnable = new InsertRunnable();
+            Thread addThread = new Thread(insertRunnable);
+            addThread.start();
             String token = editTextToken.getText().toString();
             Intent intent = new Intent(MainActivity.this, Home_page.class);
             intent.putExtra("TOKEN",token);
@@ -165,6 +168,10 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
                 if(!TOKEN.equals("")){
                 setUpCanvasAPI();
                 UserAPI.getSelf(userCallback);}
+                else{
+                    Toast toast = Toast.makeText(getApplicationContext(),"Please Enter TOKEN",Toast.LENGTH_SHORT);
+                    toast.show();
+                }
 
             }
         });
@@ -244,29 +251,7 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
 
     @Override
     public void onCallbackFinished(CanvasCallback.SOURCE source) {
-        Log.d("INSPECT2", TOKEN + userId);
-        Log.d("INSPECT",userId + String.valueOf(userId==null));
-        if(userId!=null) {
-            class InsertRunnable2 implements Runnable {
-                @Override
-                public void run() {
-                    Userinfo userinfoTemp = new Userinfo();
-                    userinfoTemp.userTOKEN = TOKEN;
-                    userinfoTemp.userId = userId;
-                    userinfoTemp.userName = userName;
-                    userinfoDB.UserinfoDao().insert(userinfoTemp);
-                }
-            }
-            Log.d("INSPECT","START");
-
-            InsertRunnable2 insertRunnable2 = new InsertRunnable2();
-            Thread addThread2 = new Thread(insertRunnable2);
-            addThread2.start();
-
-        }
-        else{
-            Log.d("INSPECT","NO START");
-
+        if(userId==null){
             Toast toast = Toast.makeText(getApplicationContext(),"INVALID TOKEN",Toast.LENGTH_SHORT);
             toast.show();
         }

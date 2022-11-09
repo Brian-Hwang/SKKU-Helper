@@ -5,7 +5,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity
-public class Userinfo {
+public class UserInfo {
     @NonNull
     @PrimaryKey(autoGenerate = false)
     public String userTOKEN;

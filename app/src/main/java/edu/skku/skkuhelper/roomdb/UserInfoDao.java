@@ -12,18 +12,21 @@ import java.util.List;
 
 @Dao
 public interface UserInfoDao {
-    @Query("SELECT * FROM Userinfo")
-    List<Userinfo> getAll();
+    @Query("SELECT * FROM UserInfo")
+    List<UserInfo> getAll();
 
-    @Query("SELECT * FROM Userinfo WHERE userTOKEN IN (:userTOKENs)")
-    List<Userinfo> loadAllByIds(int[] userTOKENs);
+    @Query("SELECT userTOKEN FROM UserInfo")
+    String getTOKEN();
+
+    @Query("SELECT * FROM UserInfo WHERE userTOKEN IN (:userTOKENs)")
+    List<UserInfo> loadAllByIds(int[] userTOKENs);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(Userinfo SKKUAssignments);
+    void insert(UserInfo SKKUAssignments);
 
     @Update
-    void update(Userinfo Userinfos);
+    void update(UserInfo userinfos);
 
     @Delete
-    void delete(Userinfo Userinfos);
+    void delete(UserInfo userinfos);
 }
