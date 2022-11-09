@@ -10,7 +10,7 @@ from pymongo import MongoClient
 # Create your views here.
 
 client = MongoClient(
-        host='43.200.180.139',
+        host='43.200.180.139', # aws 연동할때 마다 가져오기
         port = 27017,
         username = 'se',
         password = '1234'
@@ -75,6 +75,6 @@ def test_input(request):
         post_id = notice_collection.insert_one(data)
         
         if post_id:
-            return JsonResponse({ "Result" : True})
+            return JsonResponse({"Result" : True})
         else:
             return JsonResponse({"Result": False})
