@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.ToggleButton;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -96,6 +97,7 @@ public class BlankFragment3 extends Fragment {
         String sum = "This is summary!";
         String link = "https://www.skku.edu/skku/index.do";
         String link2 = "https://icampus.skku.edu/";
+        //example
         items = new ArrayList<Notice>();
         spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -128,6 +130,13 @@ public class BlankFragment3 extends Fragment {
                 items.add(new Notice("공지제목3", "글쓴이3", "2021-01-01", link, true, sum));
                 listViewAdapter = new ListViewAdapter_Notification(items, getActivity().getApplicationContext());
                 listView.setAdapter(listViewAdapter);
+            }
+        });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(items.get(position).link));
+                startActivity(intent);
             }
         });
 
