@@ -144,13 +144,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
             @Override
             public void firstPage(ToDo[] todos, LinkHeaders linkHeaders, Response response) {
-                try
-                {
-                    sleep(1000);
-                } catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
+
                 for (ToDo todo : todos) {
                     while(true){
                         if (courseList.size() != 0) break;
