@@ -1,5 +1,7 @@
 package edu.skku.skkuhelper;
 
+import static java.lang.Thread.sleep;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,16 +14,19 @@ import com.google.android.material.snackbar.Snackbar;
 import com.instructure.canvasapi.api.ConversationAPI;
 import com.instructure.canvasapi.api.CourseAPI;
 import com.instructure.canvasapi.api.ToDoAPI;
+import com.instructure.canvasapi.api.UserAPI;
 import com.instructure.canvasapi.model.CanvasError;
 import com.instructure.canvasapi.model.Conversation;
 import com.instructure.canvasapi.model.Course;
 import com.instructure.canvasapi.model.ToDo;
+import com.instructure.canvasapi.model.User;
 import com.instructure.canvasapi.utilities.APIHelpers;
 import com.instructure.canvasapi.utilities.APIStatusDelegate;
 import com.instructure.canvasapi.utilities.CanvasCallback;
 import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
 import com.instructure.canvasapi.utilities.LinkHeaders;
+import com.instructure.canvasapi.utilities.UserCallback;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -35,7 +40,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import edu.skku.skkuhelper.databinding.ActivityMainBinding;
+import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
+import edu.skku.skkuhelper.roomdb.Userinfo;
+import edu.skku.skkuhelper.roomdb.UserinfoDB;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
@@ -63,23 +70,66 @@ import android.widget.EditText;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements APIStatusDelegate, ErrorDelegate  {
     private String id,pwd;
 
+    EditText editTextToken;
+    Button btnLogin;
+    /************* Canvas API GLOBAL Variables *************/
+    UserCallback userCallback;
+    String userId=null;
+    String userName=null;
+    public static String TOKEN=null;
+    public final static String DOMAIN = "https://canvas.skku.edu/";
+    boolean isCallbackFinished = false;
+    /************* Canvas API GLOBAL Variables *************/
+
+    /************* Room DB GLOBAL Variables *************/
+    UserinfoDB userinfoDB = null;
+    /************* Room DB GLOBAL Variables *************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button btnLogin = findViewById(R.id.buttonLogin);
-        EditText editTextToken = findViewById(R.id.editTextPassword);
+        /************* Room DB CREATE START *************/
+        userinfoDB = userinfoDB.getInstance(this);
+        /************* Room DB CREATE END *************/
+
+        btnLogin = findViewById(R.id.buttonLogin);
+        editTextToken = findViewById(R.id.editTextPassword);
         CheckBox Auto_LogIn;
         SharedPreferences setting;
         SharedPreferences.Editor editor;
         Auto_LogIn = (CheckBox) findViewById(R.id.check);
         setting = getSharedPreferences("setting", 0);
         editor= setting.edit();
+        /************* Canvas API CREATE START *************/
+
+
+
+        userCallback = new UserCallback(MainActivity.this) {
+
+            @Override
+            public void cachedUser(User user) {
+                APIHelpers.setCacheUser(MainActivity.this, user);
+            }
+
+            @Override
+            public void user(User user, Response response) {
+                userId = user.getLoginId();
+                userName = user.getName();
+
+                //login success
+                Intent intent = new Intent(MainActivity.this, Home_page.class);
+                intent.putExtra("TOKEN", TOKEN);
+                startActivity(intent);
+//                isCallbackFinished
+
+            }
+        };
+        /************* Canvas API CREATE END*************/
 
         if(setting.getString("TOKEN",null) != null) {
             String token = editTextToken.getText().toString();
@@ -98,22 +148,24 @@ public class MainActivity extends AppCompatActivity {
                     String TOKEN = editTextToken.getText().toString();
                     editor.putString("TOKEN", TOKEN);
                    // editor.putBoolean("Auto_Login_enabled", true);
-                    editor.commit();
+                    editor.apply();
                 }
                 else{
                     editor.clear();
-                    editor.commit();
+                    editor.apply();
                 }
             }
         });
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //login success
-                String token = editTextToken.getText().toString();
-                Intent intent = new Intent(MainActivity.this, Home_page.class);
-                intent.putExtra("TOKEN",token);
-                startActivity(intent);
+
+                TOKEN = editTextToken.getText().toString();
+                //Set up CanvasAPI
+                if(!TOKEN.equals("")){
+                setUpCanvasAPI();
+                UserAPI.getSelf(userCallback);}
+
             }
         });
        
@@ -172,5 +224,93 @@ public class MainActivity extends AppCompatActivity {
         // notificationId is a unique int for each notification that you must define
         notificationManagercompat.notify(1, builder.build());
         /************* Example of Notification *************/
+    }
+
+    /**
+     * This is all stuff that should only need to be called once for the entire project.
+     */
+    public void setUpCanvasAPI() {
+        //Set up the Canvas Rest Adapter.
+        CanvasRestAdapter.setupInstance(this, TOKEN, DOMAIN);
+        //Set up a default error delegate. This will be the same one for all API calls
+        //You can override the default ErrorDelegate in any CanvasCallBack constructor.
+        //In a real application, this should probably be a standalone class.
+        APIHelpers.setDefaultErrorDelegateClass(this, this.getClass().getName());
+    }
+    @Override
+    public void onCallbackStarted() {
+        btnLogin.setEnabled(false);
+    }
+
+    @Override
+    public void onCallbackFinished(CanvasCallback.SOURCE source) {
+        Log.d("INSPECT2", TOKEN + userId);
+        Log.d("INSPECT",userId + String.valueOf(userId==null));
+        if(userId!=null) {
+            class InsertRunnable2 implements Runnable {
+                @Override
+                public void run() {
+                    Userinfo userinfoTemp = new Userinfo();
+                    userinfoTemp.userTOKEN = TOKEN;
+                    userinfoTemp.userId = userId;
+                    userinfoTemp.userName = userName;
+                    userinfoDB.UserinfoDao().insert(userinfoTemp);
+                }
+            }
+            Log.d("INSPECT","START");
+
+            InsertRunnable2 insertRunnable2 = new InsertRunnable2();
+            Thread addThread2 = new Thread(insertRunnable2);
+            addThread2.start();
+
+        }
+        else{
+            Log.d("INSPECT","NO START");
+
+            Toast toast = Toast.makeText(getApplicationContext(),"INVALID TOKEN",Toast.LENGTH_SHORT);
+            toast.show();
+        }
+        btnLogin.setEnabled(true);
+
+    }
+
+    @Override
+    public void onNoNetwork() {
+
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public void noNetworkError(RetrofitError retrofitError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "There was no network");
+
+    }
+
+    @Override
+    public void notAuthorizedError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 401");
+
+    }
+
+    @Override
+    public void invalidUrlError(RetrofitError retrofitError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 404");
+
+    }
+
+    @Override
+    public void serverError(RetrofitError retrofitError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 500");
+
+    }
+
+    @Override
+    public void generalError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 200 but something went wrong. Probably a GSON parse error.");
+
     }
 }

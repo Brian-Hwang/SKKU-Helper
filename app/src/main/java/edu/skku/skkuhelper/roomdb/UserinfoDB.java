@@ -20,7 +20,7 @@ public abstract class UserinfoDB extends RoomDatabase {
     public static UserinfoDB getInstance(Context context) {
         if (database == null) {
             database = Room.databaseBuilder(context.getApplicationContext(),
-                            UserinfoDB.class, "SKKUassignment.db")
+                            UserinfoDB.class, "userifo.db")
                     .allowMainThreadQueries()
                     .fallbackToDestructiveMigration()
                     .build();

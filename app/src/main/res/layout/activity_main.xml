@@ -62,7 +62,7 @@
         android:ems="13"
         android:hint="Token ID"
         android:inputType="textPassword"
-        android:maxLength="10"
+        android:maxLength="70"
         android:padding="13dp"
         android:textColor="#ffffff"
         android:textColorHint="#ffffff"

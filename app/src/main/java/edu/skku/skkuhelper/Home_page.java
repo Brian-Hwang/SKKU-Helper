@@ -57,14 +57,14 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     /************* Canvas API GLOBAL Variables *************/
     private AppBarConfiguration appBarConfiguration;
     public final static String DOMAIN = "https://canvas.skku.edu/";
-    public static String TOKEN = "i8NCRKu4HN55HJ9bTdPoziLUybwKS1xYBtlA5dyzwHtXPI8kWPlrcHOZkMlMnfMP";
+    public static String TOKEN;
 
     LinkedHashMap<Long, String> courseList = new LinkedHashMap<>();
     ArrayList<todoClass> todolist = new ArrayList<>();
 
     CanvasCallback<Course[]> courseCanvasCallback;
     CanvasCallback<ToDo[]> todosCanvasCallback;
-    UserCallback userCallback;
+//    UserCallback userCallback;
     String userId;
     String userName;
     /************* Canvas API GLOBAL Variables *************/
@@ -108,19 +108,19 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         //Set up CanvasAPI
         setUpCanvasAPI();
 
-        userCallback = new UserCallback(Home_page.this) {
-
-            @Override
-            public void cachedUser(User user) {
-                APIHelpers.setCacheUser(Home_page.this, user);
-            }
-
-            @Override
-            public void user(User user, Response response) {
-                userId = user.getLoginId();
-                userName = user.getName();
-            }
-        };
+//        userCallback = new UserCallback(Home_page.this) {
+//
+//            @Override
+//            public void cachedUser(User user) {
+//                APIHelpers.setCacheUser(Home_page.this, user);
+//            }
+//
+//            @Override
+//            public void user(User user, Response response) {
+//                userId = user.getLoginId();
+//                userName = user.getName();
+//            }
+//        };
 
         courseCanvasCallback = new CanvasCallback<Course[]>(this) {
             @Override
@@ -152,7 +152,9 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                     e.printStackTrace();
                 }
                 for (ToDo todo : todos) {
-                    while(courseList.size()!=0){}
+                    while(true){
+                        if (courseList.size() != 0) break;
+                    }
                     Date today = new Date();
                     if(todo.getAssignment().getPointsPossible()==0.0f || todo.getAssignment().getDueDate().before(today))
                         continue;
@@ -170,7 +172,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             }
         };
 
-        UserAPI.getSelf(userCallback);
+//        UserAPI.getSelf(userCallback);
         CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
         ToDoAPI.getUserTodos(todosCanvasCallback);
         /************* Canvas API CREATE END*************/
@@ -305,19 +307,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             Thread addThread = new Thread(insertRunnable);
             addThread.start();
         }
-        class InsertRunnable2 implements Runnable {
-            @Override
-            public void run() {
-                Userinfo userinfoTemp = new Userinfo();
-                userinfoTemp.userTOKEN = TOKEN;
-                userinfoTemp.userId = userId;
-                userinfoTemp.userName = userName;
-                userinfoDB.UserinfoDao().insert(userinfoTemp);
-            }
-        }
-        InsertRunnable2 insertRunnable2 = new InsertRunnable2();
-        Thread addThread2 = new Thread(insertRunnable2);
-        addThread2.start();
 
 
 
