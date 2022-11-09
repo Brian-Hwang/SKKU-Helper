@@ -1,5 +1,7 @@
 package edu.skku.skkuhelper;
 
+import static java.lang.Thread.sleep;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -142,7 +144,15 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
             @Override
             public void firstPage(ToDo[] todos, LinkHeaders linkHeaders, Response response) {
+                try
+                {
+                    sleep(1000);
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
                 for (ToDo todo : todos) {
+                    while(courseList.size()!=0){}
                     Date today = new Date();
                     if(todo.getAssignment().getPointsPossible()==0.0f || todo.getAssignment().getDueDate().before(today))
                         continue;
