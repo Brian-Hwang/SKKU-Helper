@@ -124,18 +124,9 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         /************* Canvas API CREATE END*************/
 
         if(setting.getString("TOKEN",null) != null) {
-            class InsertRunnable implements Runnable {
-                @Override
-                public void run() {
-                    TOKEN = userinfoDao.getTOKEN();
-                }
-            }
-            InsertRunnable insertRunnable = new InsertRunnable();
-            Thread addThread = new Thread(insertRunnable);
-            addThread.start();
-            String token = editTextToken.getText().toString();
+
             Intent intent = new Intent(MainActivity.this, Home_page.class);
-            intent.putExtra("TOKEN",token);
+            intent.putExtra("TOKEN",setting.getString("TOKEN",""));
             startActivity(intent);
         }
 

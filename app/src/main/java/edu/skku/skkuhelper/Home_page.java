@@ -173,7 +173,12 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 //        UserAPI.getSelf(userCallback);
         CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
         ToDoAPI.getUserTodos(todosCanvasCallback);
+
+
+
         /************* Canvas API CREATE END*************/
+
+
 
     }
 
@@ -305,10 +310,8 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             Thread addThread = new Thread(insertRunnable);
             addThread.start();
         }
-
-
-
-        manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
+        if (courseCanvasCallback.isFinished())
+            manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
 
     }
 

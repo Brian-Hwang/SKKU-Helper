@@ -9,6 +9,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.room.Room;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +29,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
@@ -53,7 +56,7 @@ public class BlankFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-
+    public boolean isFinished = false;
     public BlankFragment() {
         // Required empty public constructor
     }
@@ -83,6 +86,8 @@ public class BlankFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        items1 = new ArrayList<LA>();
+        items2 = new ArrayList<LA>();
     }
 
     @Override
@@ -91,14 +96,15 @@ public class BlankFragment extends Fragment {
         listView = v.findViewById(R.id.listViewIcampus);
         Button btn1 = v.findViewById(R.id.buttonLecture);
         Button btn2 = v.findViewById(R.id.buttonAssignment);
+//        btn1.setEnabled(false);
+//        btn2.setEnabled(false);
         SKKUAssignmentDB db = Room.databaseBuilder(getActivity().getApplicationContext(), SKKUAssignmentDB.class, "SKKUassignment.db").build();
         SKKUAssignmentDao assignmentDao = db.SKKUassignmentDao();
+        final android.os.Handler handler=new Handler();
 
         class InsertRunnable implements Runnable {
             @Override
             public void run() {
-                items1 = new ArrayList<LA>();
-                items2 = new ArrayList<LA>();
                 icampusList = assignmentDao.getAll();
                 Date date1 = new Date();
                 String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(date1);
@@ -113,14 +119,14 @@ public class BlankFragment extends Fragment {
                     }
                     long diff = Math.abs(date1.getTime() - date2.getTime());
                     long diffDays = diff / (24 * 60 * 60 * 1000);
-                    if(icampusList.get(count).isLecture == true) {
+                    if(icampusList.get(count).isLecture) {
                         items1.add(new LA(String.valueOf(icampusList.get(count).courseName), (String.valueOf(icampusList.get(count).assignmentName)), icampusList.get(count).assignmentId, fmt.format(date2), diffDays, icampusList.get(count).isAlarm, icampusList.get(count).url));
                     }
                     else {
                         items2.add(new LA(String.valueOf(icampusList.get(count).courseName), (String.valueOf(icampusList.get(count).assignmentName)), icampusList.get(count).assignmentId, fmt.format(date2), diffDays, icampusList.get(count).isAlarm, icampusList.get(count).url));
                     }
                 }
-
+                isFinished =true;
             }
         }
 
@@ -131,20 +137,24 @@ public class BlankFragment extends Fragment {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                check = 1;
-                Collections.sort(items1, sortByTotalCall);
-                listViewAdapter = new ListViewAdapter_LR(items1, getActivity().getApplicationContext(), icampusList);
-                listView.setAdapter(listViewAdapter);
+                if(isFinished){
+                    check = 1;
+                    items1.sort(sortByTotalCall);
+                    listViewAdapter = new ListViewAdapter_LR(items1, getActivity().getApplicationContext(), icampusList);
+                    listView.setAdapter(listViewAdapter);
+                }
             }
         });
 
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                check = 2;
-                Collections.sort(items2, sortByTotalCall);
-                listViewAdapter = new ListViewAdapter_LR(items2, getActivity().getApplicationContext(), icampusList);
-                listView.setAdapter(listViewAdapter);
+                if(isFinished){
+                    check = 2;
+                    items2.sort(sortByTotalCall);
+                    listViewAdapter = new ListViewAdapter_LR(items2, getActivity().getApplicationContext(), icampusList);
+                    listView.setAdapter(listViewAdapter);
+            }
             }
         });
 
@@ -161,7 +171,6 @@ public class BlankFragment extends Fragment {
                 startActivity(intent);
             }
         });
-
         return v;
     }
     private final static Comparator<LA> sortByTotalCall = new Comparator<LA>() {
