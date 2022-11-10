@@ -128,7 +128,6 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
                 @Override
                 public void run() {
                     TOKEN = userinfoDao.getTOKEN();
-
                 }
             }
             InsertRunnable insertRunnable = new InsertRunnable();
