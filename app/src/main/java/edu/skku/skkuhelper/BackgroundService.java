@@ -15,12 +15,12 @@ import java.util.List;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
-import edu.skku.skkuhelper.roomdb.UserinfoDB;
+//import edu.skku.skkuhelper.roomdb.UserinfoDB;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
-import edu.skku.skkuhelper.roomdb.Userinfo;
-import edu.skku.skkuhelper.roomdb.UserinfoDB;
+//import edu.skku.skkuhelper.roomdb.Userinfo;
+//import edu.skku.skkuhelper.roomdb.UserinfoDB;
 
 
 public class BackgroundService extends Service {
@@ -31,7 +31,7 @@ public class BackgroundService extends Service {
     private String id, pwd;                         //log-in info
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
-    UserinfoDB userinfoDB = null;
+    //UserinfoDB userinfoDB = null;
     /************* Room DB GLOBAL Variables *************/
     @Override
     public IBinder onBind(Intent intent) {
@@ -108,7 +108,7 @@ public class BackgroundService extends Service {
         Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
         /************* Room DB CREATE START *************/
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
-        userinfoDB = userinfoDB.getInstance(this);
+        //userinfoDB = userinfoDB.getInstance(this);
         /************* Room DB CREATE END *************/
         handler = new Handler();
         runnable = new Runnable() {
