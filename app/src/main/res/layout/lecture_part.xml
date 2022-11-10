@@ -7,36 +7,39 @@
 
     <TextView
         android:id="@+id/textViewSubject"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="30sp"
         android:text="과목: "
-        android:layout_marginTop="5dp"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:background="@color/grey"
         app:layout_constraintBottom_toTopOf="@id/textViewTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:textSize="18sp"
+        android:layout_marginTop="10dp"
         android:text="강의 이름: "
+        android:textSize="18sp"
+        android:outlineSpotShadowColor="@color/grey"
         app:layout_constraintBottom_toTopOf="@id/textViewDeadline"
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonNotification"
         app:layout_constraintStart_toStartOf="@id/textViewSubject"
-        app:layout_constraintTop_toBottomOf="@id/textViewSubject"/>
+        app:layout_constraintTop_toBottomOf="@id/textViewSubject" />
 
     <TextView
         android:id="@+id/textViewDeadline"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="마감기한: "
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="@id/textViewTitle"
-        app:layout_constraintTop_toBottomOf="@id/textViewTitle"
+        android:layout_marginTop="5dp"
         app:layout_constraintBottom_toTopOf="@id/textViewDeadline2"
-        />
+        app:layout_constraintEnd_toStartOf="@+id/imageButtonNotification"
+        app:layout_constraintStart_toStartOf="@id/textViewTitle"
+        app:layout_constraintTop_toBottomOf="@id/textViewTitle" />
 
     <TextView
         android:id="@+id/textViewAlarm"
@@ -50,21 +53,27 @@
 
     <TextView
         android:id="@+id/textViewDeadline2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/rounded_border_text"
+        android:gravity="center"
         android:text="몇일 남음"
-        app:layout_constraintBottom_toBottomOf="@id/textViewDeadline"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textViewDeadline" />
 
     <ImageButton
         android:id="@+id/imageButtonNotification"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:src="@drawable/ic_baseline_notifications_none_24"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewSubject" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
