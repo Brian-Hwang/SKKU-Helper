@@ -16,7 +16,6 @@ import androidx.room.Room;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -28,16 +27,16 @@ class LA {
     public String subject;
     public String title;
     public long assignmentId;
-    public Date dueDate;
-    public boolean isLecture;
+    public String dueDate;
+    public long restDate;
     public long isAlarm;
     public String url;
-    public LA(String subject, String title, long assignmentId, Date dueDate, boolean isLecture, long isAlarm, String url){
+    public LA(String subject, String title, long assignmentId, String dueDate, long restDate, long isAlarm, String url){
         this.subject = subject;
         this.title = title;
         this.assignmentId = assignmentId;
         this.dueDate = dueDate;
-        this.isLecture = isLecture;
+        this.restDate = restDate;
         this.isAlarm = isAlarm;
         this.url = url;
     }
@@ -81,20 +80,9 @@ public class ListViewAdapter_LR extends BaseAdapter {
         TextView textViewAlarm = view.findViewById(R.id.textViewAlarm);
         ImageButton btn = view.findViewById(R.id.imageButtonNotification);
         textViewSubject.setText(items.get(i).subject);
-        if(items.get(i).isLecture == true)
-            textViewTitle.setText("강의: " + items.get(i).title);
-        else
-            textViewTitle.setText("과제: " + items.get(i).title);
-
-        String Deadline =  String.valueOf(1900 + items.get(i).dueDate.getYear()) + "년 " + String.valueOf(items.get(i).dueDate.getMonth() + 1) + "월 " + String.valueOf(items.get(i).dueDate.getDate()) + "일 " +(items.get(i).dueDate.getHours()) + ":" + items.get(i).dueDate.getMinutes() + ":" + items.get(i).dueDate.getSeconds();
-
-        textViewDeadline.setText("마감기한: " + Deadline);
-        Date currentDate = new Date();
-        //Log.d("hours", " " + items.get(i).dueDate.getHours() + ":" + items.get(i).dueDate.getMinutes() + ":" + items.get(i).dueDate.getSeconds());
-        long diffDay=(items.get(i).dueDate.getTime()-currentDate.getTime())/(24*60*60*1000);
-        long diffHours=(items.get(i).dueDate.getTime()-currentDate.getTime())/(60*60*1000);
-
-        textViewDeadline2.setText(diffDay + "일, " +diffHours + "시간 남음");
+        textViewTitle.setText(items.get(i).title);
+        textViewDeadline.setText("마감기한" + String.valueOf(items.get(i).dueDate));
+        textViewDeadline2.setText(items.get(i).restDate + "일 남음");
 
         if(items.get(i).isAlarm == 0) {
             Drawable drawable = view.getResources().getDrawable(R.drawable.ic_baseline_notifications_none_24);
@@ -128,7 +116,8 @@ public class ListViewAdapter_LR extends BaseAdapter {
                         for(int count = 0; count < l.size(); count++) {
                             if(l.get(count).assignmentId == items.get(i).assignmentId) {
                                 l.get(count).isAlarm = items.get(i).isAlarm;
-                                assignmentDao.update(l.get(count));
+                                SKKUAssignment l2 = (SKKUAssignment) l.get(count);
+                                assignmentDao.update(l2);
                             }
                         }
 
@@ -161,6 +150,4 @@ public class ListViewAdapter_LR extends BaseAdapter {
         });
         return view;
     }
-
 }
-

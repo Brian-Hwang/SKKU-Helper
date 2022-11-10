@@ -168,7 +168,7 @@ public class BlankFragment extends Fragment {
     private final static Comparator<LA> sortByTotalCall = new Comparator<LA>() {
         @Override
         public int compare(LA o1, LA o2) {
-            return Long.compare(o1.dueDate.getTime(), o2.dueDate.getTime());
+            return return Long.compare(o1.dueDate.getTime(), o2.dueDate.getTime());
 
         }
     };
