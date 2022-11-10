@@ -50,30 +50,27 @@ public class BackgroundService extends Service {
             String courseName=tmp.courseName;
             long alarmType=tmp.isAlarm;
             long diff=(dueDate.getTime()-currentDate.getTime())/(60*60*1000);
-            if(alarmType==1 && diff<1.5){
+            if(alarmType==1 && diff<6){
                 sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
                 tmp.isAlarm=0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
-            else if (alarmType==2 && diff<6.5){
+            else if (alarmType==2 && diff<24){
                 sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
                 tmp.isAlarm=0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
-            else if (alarmType==3 && diff<12.5){
-                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-                tmp.isAlarm=0;
-                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-            }
-            else if (alarmType==4 && diff<24.5){
+            else if (alarmType==3 && diff<24){
                 sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
                 tmp.isAlarm=0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
             /****테스트용****/
-            else{
-                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-            }
+//            else{
+//                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
+//                tmp.isAlarm=0;
+//                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
+//            }
             /****테스트용****/
         }
     }
