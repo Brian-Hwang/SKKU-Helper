@@ -9,8 +9,24 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.room.Room;
 
+import com.instructure.canvasapi.api.CourseAPI;
+import com.instructure.canvasapi.api.ToDoAPI;
+import com.instructure.canvasapi.model.Assignment;
+import com.instructure.canvasapi.model.CanvasError;
+import com.instructure.canvasapi.model.Course;
+import com.instructure.canvasapi.model.ToDo;
+import com.instructure.canvasapi.utilities.APIHelpers;
+import com.instructure.canvasapi.utilities.APIStatusDelegate;
+import com.instructure.canvasapi.utilities.CanvasCallback;
+import com.instructure.canvasapi.utilities.CanvasRestAdapter;
+import com.instructure.canvasapi.utilities.ErrorDelegate;
+import com.instructure.canvasapi.utilities.LinkHeaders;
+
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
@@ -19,11 +35,25 @@ import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
+import edu.skku.skkuhelper.roomdb.UserInfoDB;
+import edu.skku.skkuhelper.roomdb.UserInfoDao;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 //import edu.skku.skkuhelper.roomdb.Userinfo;
-//import edu.skku.skkuhelper.roomdb.UserinfoDB;
 
 
-public class BackgroundService extends Service {
+public class BackgroundService extends Service implements APIStatusDelegate, ErrorDelegate {
+
+    //변수
+    public final static String DOMAIN = "https://canvas.skku.edu/";
+    public static String TOKEN=null;
+
+    LinkedHashMap<Long, String> courseList = new LinkedHashMap<>();
+    ArrayList<todoClass> todolist = new ArrayList<>();
+
+    CanvasCallback<Course[]> courseCanvasCallback;
+    CanvasCallback<ToDo[]> todosCanvasCallback;
+    //
 
     public Context context = this;
     public Handler handler = null;
@@ -31,7 +61,7 @@ public class BackgroundService extends Service {
     private String id, pwd;                         //log-in info
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
-    //UserinfoDB userinfoDB = null;
+    UserInfoDB userinfoDB = null;
     /************* Room DB GLOBAL Variables *************/
     @Override
     public IBinder onBind(Intent intent) {
@@ -41,7 +71,6 @@ public class BackgroundService extends Service {
 
     public void checkAlarm(){
         List<SKKUAssignment> assignments=SKKUassignmentDB.SKKUassignmentDao().getAll();
-        List<SKKUAssignment> toSend;
         Date currentDate = new Date();
         for(int i=0;i<assignments.size();i++){
             SKKUAssignment tmp=assignments.get(i);
@@ -55,7 +84,7 @@ public class BackgroundService extends Service {
                 tmp.isAlarm=0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
-            else if (alarmType==2 && diff<24){
+            else if (alarmType==2 && diff<12){
                 sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
                 tmp.isAlarm=0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
@@ -66,7 +95,7 @@ public class BackgroundService extends Service {
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
             /****테스트용****/
-//            else{
+//            else if (alarmType!=0){
 //                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
 //                tmp.isAlarm=0;
 //                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
@@ -100,39 +129,193 @@ public class BackgroundService extends Service {
         Log.d("alarm",title);
     }
 
+    public void getAssignments(){
+        courseCanvasCallback = new CanvasCallback<Course[]>(this) {
+            @Override
+            public void cache(Course[] courses) {
+            }
+
+            @Override
+            public void firstPage(Course[] courses, LinkHeaders linkHeaders, Response response) {
+                for (Course course : courses) {
+                    courseList.put(course.getId(),course.getName());
+                }
+            }
+        };
+
+        todosCanvasCallback = new CanvasCallback<ToDo[]>(this) {
+            @Override
+            public void cache(ToDo[] courses) {
+            }
+
+            @Override
+            public void firstPage(ToDo[] todos, LinkHeaders linkHeaders, Response response) {
+
+                for (ToDo todo : todos) {
+                    while(true){
+                        if (courseList.size() != 0) break;
+                    }
+                    Date today = new Date();
+                    if(todo.getAssignment().getPointsPossible()==0.0f || todo.getAssignment().getDueDate().before(today))
+                        continue;
+                    todoClass todoTemp = new todoClass();
+                    todoTemp.isLecture = todo.getAssignment().getTurnInType() == Assignment.TURN_IN_TYPE.EXTERNAL_TOOL;
+                    todoTemp.assignmentName = todo.getAssignment().getName();
+                    todoTemp.courseName = courseList.get(todo.getAssignment().getCourseId());
+                    todoTemp.assignmentId = todo.getAssignment().getId();
+                    todoTemp.courseId = todo.getAssignment().getCourseId();
+                    todoTemp.dueDate = todo.getDueDate();
+                    todoTemp.url = todo.getHtmlUrl();
+                    todolist.add(todoTemp);
+                }
+                Log.d("size confirm", todolist.size() + "");
+            }
+        };
+        CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
+        ToDoAPI.getUserTodos(todosCanvasCallback);
+    }
+
+
     @Override
     public void onCreate() {
-        Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
+        ///Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
         /************* Room DB CREATE START *************/
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
-        //userinfoDB = userinfoDB.getInstance(this);
+        userinfoDB = UserInfoDB.getInstance(this);
+        //
+        UserInfoDB db = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
+        UserInfoDao userInfoDao = db.UserinfoDao();
         /************* Room DB CREATE END *************/
+        /************* Canvas API CREATE START *************/
+        class InsertRunnable implements Runnable {
+            @Override
+            public void run() {
+                TOKEN = userInfoDao.getTOKEN();
+            }
+        }
+        InsertRunnable insertRunnable = new InsertRunnable();
+        Thread addThread = new Thread(insertRunnable);
+        addThread.start();
+
+
+        while(true){
+            if (TOKEN != null) break;
+        }
+        setUpCanvasAPI();
+        /************* Canvas API CREATE END*************/
+        //
         handler = new Handler();
         runnable = new Runnable() {
             public void run() {
                 /************* Put functions here *************/
-                /* Crawling iCampus & Get Notice Info -> Store data */
-                Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
-                /************* Put functions here *************/
+                //Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
+                getAssignments();
                 checkAlarm();
-                handler.postDelayed(runnable, 5000);    //min*60000
+                /************* Put functions here *************/
+                handler.postDelayed(runnable, 10000);    //min*60000, 30min=>1800000
             }
         };
-        handler.postDelayed(runnable, 5000);
+        handler.postDelayed(runnable, 10000);
     }
 
     @Override
     public void onDestroy() {
         handler.removeCallbacks(runnable);
-        Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
-        Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
         id=intent.getStringExtra("id");
         pwd=intent.getStringExtra("pwd");
         //return super.onStartCommand(intent,flags,startid);
         return Service.START_REDELIVER_INTENT;
     }
+
+
+    //
+    public void setUpCanvasAPI() {
+        //Set up the Canvas Rest Adapter.
+        CanvasRestAdapter.setupInstance(this, TOKEN, DOMAIN);
+
+        //Set up a default error delegate. This will be the same one for all API calls
+        //You can override the default ErrorDelegate in any CanvasCallBack constructor.
+        //In a real application, this should probably be a standalone class.
+        APIHelpers.setDefaultErrorDelegateClass(this, this.getClass().getName());
+    }
+
+    @Override
+    public void onCallbackStarted() {
+
+    }
+
+    @Override
+    public void onCallbackFinished(CanvasCallback.SOURCE source) {
+        for(todoClass todos : todolist) {
+            Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
+
+            class InsertRunnable implements Runnable {
+                @Override
+                public void run() {
+                    SKKUAssignment todoTemp = new SKKUAssignment();
+                    todoTemp.isLecture = todos.isLecture;
+                    todoTemp.assignmentName = todos.assignmentName;
+                    todoTemp.courseName = todos.courseName;
+                    todoTemp.assignmentId = todos.assignmentId;
+                    todoTemp.courseId = todos.courseId;
+                    todoTemp.dueDate = todos.dueDate;
+                    todoTemp.url = todos.url;
+                    SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
+                }
+            }
+
+            InsertRunnable insertRunnable = new InsertRunnable();
+            Thread addThread = new Thread(insertRunnable);
+            addThread.start();
+        }
+    }
+
+    @Override
+    public void onNoNetwork() {
+
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public void noNetworkError(RetrofitError retrofitError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "There was no network");
+
+    }
+
+    @Override
+    public void notAuthorizedError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 401");
+
+    }
+
+    @Override
+    public void invalidUrlError(RetrofitError retrofitError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 404");
+
+    }
+
+    @Override
+    public void serverError(RetrofitError retrofitError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 500");
+
+    }
+
+    @Override
+    public void generalError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
+        Log.d(APIHelpers.LOG_TAG, "HTTP 200 but something went wrong. Probably a GSON parse error.");
+
+    }
+    //
+
+
 }
