@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.content.SharedPreferences;
 import android.widget.Toast;
 
@@ -80,7 +82,9 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         /************* Room DB CREATE START *************/
-//        userinfoDB = UserInfoDB.getInstance(this);
+        userinfoDB = UserInfoDB.getInstance(this);
+        UserInfoDB infoDB = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
+        UserInfoDao userInfoDao = infoDB.UserinfoDao();
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
         /************* Room DB CREATE END *************/
         setContentView(R.layout.activity_navigation_menu);
@@ -98,6 +102,23 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         Log.d("TOKEN", TOKEN);
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        class InsertRunnable implements Runnable {
+            @Override
+            public void run() {
+                Log.d("user name and id2 : ", userInfoDao.getAll().size() + "");
+                userId = userInfoDao.getAll().get(0).userId;
+                userName = userInfoDao.getAll().get(0).userName;
+                //Log.d("user name and id", userId + " " + userName);
+                View view = navigationView.getHeaderView(0);
+                TextView textView1 = view.findViewById(R.id.textView);
+                TextView textView2 = view.findViewById(R.id.studentName);
+                textView1.setText(userId);
+                textView2.setText(userName);
+            }
+        }
+        InsertRunnable insertRunnable = new InsertRunnable();
+        Thread addThread = new Thread(insertRunnable);
+        addThread.start();
         navigationView.setNavigationItemSelectedListener(this);
         manager = getSupportFragmentManager();
         Objects.requireNonNull(getSupportActionBar()).setTitle("Lecture/Assignment");

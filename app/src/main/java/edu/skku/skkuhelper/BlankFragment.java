@@ -106,27 +106,7 @@ public class BlankFragment extends Fragment {
             @Override
             public void run() {
                 icampusList = assignmentDao.getAll();
-                Date date1 = new Date();
-                String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(date1);
-                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-                for(int count = 0; count < icampusList.size(); count++) {
-                    String dateString = String.valueOf(1900 + icampusList.get(count).dueDate.getYear() + "-" + String.valueOf(icampusList.get(count).dueDate.getMonth() + 1) + "-" + String.valueOf(icampusList.get(count).dueDate.getDate()));
-                    Date date2 = null;
-                    try {
-                        date2 = fmt.parse(dateString);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    long diff = Math.abs(date1.getTime() - date2.getTime());
-                    long diffDays = diff / (24 * 60 * 60 * 1000);
-                    if(icampusList.get(count).isLecture) {
-                        items1.add(new LA(String.valueOf(icampusList.get(count).courseName), (String.valueOf(icampusList.get(count).assignmentName)), icampusList.get(count).assignmentId, fmt.format(date2), diffDays, icampusList.get(count).isAlarm, icampusList.get(count).url));
-                    }
-                    else {
-                        items2.add(new LA(String.valueOf(icampusList.get(count).courseName), (String.valueOf(icampusList.get(count).assignmentName)), icampusList.get(count).assignmentId, fmt.format(date2), diffDays, icampusList.get(count).isAlarm, icampusList.get(count).url));
-                    }
-                }
-                isFinished =true;
+                isFinished = true;
             }
         }
 
@@ -139,6 +119,12 @@ public class BlankFragment extends Fragment {
             public void onClick(View view) {
                 if(isFinished){
                     check = 1;
+                    items1 = new ArrayList<LA>();
+                    for(int count = 0; count < icampusList.size(); count++) {
+                        if(icampusList.get(count).isLecture == true) {
+                            items1.add(new LA(String.valueOf(icampusList.get(count).courseName), (String.valueOf(icampusList.get(count).assignmentName)), icampusList.get(count).assignmentId, icampusList.get(count).dueDate, icampusList.get(count).isLecture, icampusList.get(count).isAlarm, icampusList.get(count).url));
+                        }
+                    }
                     items1.sort(sortByTotalCall);
                     listViewAdapter = new ListViewAdapter_LR(items1, getActivity().getApplicationContext(), icampusList);
                     listView.setAdapter(listViewAdapter);
@@ -151,6 +137,12 @@ public class BlankFragment extends Fragment {
             public void onClick(View view) {
                 if(isFinished){
                     check = 2;
+                    items2 = new ArrayList<LA>();
+                    for(int count = 0; count < icampusList.size(); count++) {
+                        if(icampusList.get(count).isLecture == false) {
+                            items2.add(new LA(String.valueOf(icampusList.get(count).courseName), (String.valueOf(icampusList.get(count).assignmentName)), icampusList.get(count).assignmentId, icampusList.get(count).dueDate, icampusList.get(count).isLecture, icampusList.get(count).isAlarm, icampusList.get(count).url));
+                        }
+                    }
                     items2.sort(sortByTotalCall);
                     listViewAdapter = new ListViewAdapter_LR(items2, getActivity().getApplicationContext(), icampusList);
                     listView.setAdapter(listViewAdapter);
@@ -176,7 +168,8 @@ public class BlankFragment extends Fragment {
     private final static Comparator<LA> sortByTotalCall = new Comparator<LA>() {
         @Override
         public int compare(LA o1, LA o2) {
-            return Long.compare(o1.restDate, o2.restDate);
+            return return Long.compare(o1.dueDate.getTime(), o2.dueDate.getTime());
+
         }
     };
 
