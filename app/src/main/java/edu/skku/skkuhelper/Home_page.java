@@ -22,23 +22,21 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.room.Room;
 
 import com.google.android.material.navigation.NavigationView;
 import com.instructure.canvasapi.api.CourseAPI;
 import com.instructure.canvasapi.api.ToDoAPI;
-import com.instructure.canvasapi.api.UserAPI;
 import com.instructure.canvasapi.model.Assignment;
 import com.instructure.canvasapi.model.CanvasError;
 import com.instructure.canvasapi.model.Course;
 import com.instructure.canvasapi.model.ToDo;
-import com.instructure.canvasapi.model.User;
 import com.instructure.canvasapi.utilities.APIHelpers;
 import com.instructure.canvasapi.utilities.APIStatusDelegate;
 import com.instructure.canvasapi.utilities.CanvasCallback;
 import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
 import com.instructure.canvasapi.utilities.LinkHeaders;
-import com.instructure.canvasapi.utilities.UserCallback;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,8 +45,10 @@ import java.util.Objects;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
-import edu.skku.skkuhelper.roomdb.Userinfo;
-import edu.skku.skkuhelper.roomdb.UserinfoDB;
+import edu.skku.skkuhelper.roomdb.SKKUAssignmentDao;
+import edu.skku.skkuhelper.roomdb.UserInfo;
+import edu.skku.skkuhelper.roomdb.UserInfoDB;
+import edu.skku.skkuhelper.roomdb.UserInfoDao;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
@@ -71,7 +71,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
-    UserinfoDB userinfoDB = null;
+    UserInfoDB userinfoDB = null;
     /************* Room DB GLOBAL Variables *************/
 
 
@@ -79,28 +79,32 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        /************* Room DB CREATE START *************/
+//        userinfoDB = UserInfoDB.getInstance(this);
+        SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
+        /************* Room DB CREATE END *************/
         setContentView(R.layout.activity_navigation_menu);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Bundle bundle = getIntent().getExtras();
         TOKEN = bundle.getString("TOKEN");
 
-
+        Log.d("TOKEN", TOKEN);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+        Log.d("TOKEN", TOKEN);
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         manager = getSupportFragmentManager();
         Objects.requireNonNull(getSupportActionBar()).setTitle("Lecture/Assignment");
+        Log.d("TOKEN", TOKEN);
 
-        /************* Room DB CREATE START *************/
-        SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
-        userinfoDB = userinfoDB.getInstance(this);
-        /************* Room DB CREATE END *************/
+
+
 
 
         /************* Canvas API CREATE START *************/
