@@ -46,10 +46,11 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 
     //변수
     public final static String DOMAIN = "https://canvas.skku.edu/";
-    public static String TOKEN=null;
+    public static String TOKEN = null;
 
     LinkedHashMap<Long, String> courseList = new LinkedHashMap<>();
     ArrayList<todoClass> todolist = new ArrayList<>();
+    LinkedHashMap<Long, Long> assignmentidList = new LinkedHashMap<>();
 
     CanvasCallback<Course[]> courseCanvasCallback;
     CanvasCallback<ToDo[]> todosCanvasCallback;
@@ -62,6 +63,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
     UserInfoDB userinfoDB = null;
+
     /************* Room DB GLOBAL Variables *************/
     @Override
     public IBinder onBind(Intent intent) {
@@ -69,29 +71,27 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     }
 
 
-    public void checkAlarm(){
-        List<SKKUAssignment> assignments=SKKUassignmentDB.SKKUassignmentDao().getAll();
+    public void checkAlarm() {
+        List<SKKUAssignment> assignments = SKKUassignmentDB.SKKUassignmentDao().getAll();
         Date currentDate = new Date();
-        for(int i=0;i<assignments.size();i++){
-            SKKUAssignment tmp=assignments.get(i);
-            Date dueDate=tmp.dueDate;
-            String assignmentName=tmp.assignmentName;
-            String courseName=tmp.courseName;
-            long alarmType=tmp.isAlarm;
-            long diff=(dueDate.getTime()-currentDate.getTime())/(60*60*1000);
-            if(alarmType==1 && diff<6){
-                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-                tmp.isAlarm=0;
+        for (int i = 0; i < assignments.size(); i++) {
+            SKKUAssignment tmp = assignments.get(i);
+            Date dueDate = tmp.dueDate;
+            String assignmentName = tmp.assignmentName;
+            String courseName = tmp.courseName;
+            long alarmType = tmp.isAlarm;
+            long diff = (dueDate.getTime() - currentDate.getTime()) / (60 * 60 * 1000);
+            if (alarmType == 1 && diff < 6) {
+                sendAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
+                tmp.isAlarm = 0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-            }
-            else if (alarmType==2 && diff<12){
-                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-                tmp.isAlarm=0;
+            } else if (alarmType == 2 && diff < 12) {
+                sendAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
+                tmp.isAlarm = 0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-            }
-            else if (alarmType==3 && diff<24){
-                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-                tmp.isAlarm=0;
+            } else if (alarmType == 3 && diff < 24) {
+                sendAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
+                tmp.isAlarm = 0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
             /****테스트용****/
@@ -104,7 +104,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         }
     }
 
-    public void sendAlarm(String title, String contents, int id){
+    public void sendAlarm(String title, String contents, int id) {
         /************* Notification builder creation for Notification *************/
         // Create an explicit intent for an Activity in your app
         //TODO change Intent activity to class specificaiton
@@ -126,10 +126,26 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         // notificationId is a unique int for each notification that you must define
         notificationManagercompat.notify(id, builder.build());
         /************* Example of Notification *************/
-        Log.d("alarm",title);
+        Log.d("alarm", title);
     }
 
-    public void getAssignments(){
+    public void getbeforeAssignments() {
+
+        class InsertRunnable implements Runnable {
+            @Override
+            public void run() {
+                List<SKKUAssignment> listTemp = SKKUassignmentDB.SKKUassignmentDao().getAll();
+                for (SKKUAssignment temp : listTemp) {
+                    assignmentidList.put(temp.assignmentId, temp.isAlarm);
+                }
+            }
+        }
+        InsertRunnable insertRunnable = new InsertRunnable();
+        Thread addThread = new Thread(insertRunnable);
+        addThread.start();
+    }
+
+    public void getAssignments() {
         courseCanvasCallback = new CanvasCallback<Course[]>(this) {
             @Override
             public void cache(Course[] courses) {
@@ -138,7 +154,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
             @Override
             public void firstPage(Course[] courses, LinkHeaders linkHeaders, Response response) {
                 for (Course course : courses) {
-                    courseList.put(course.getId(),course.getName());
+                    courseList.put(course.getId(), course.getName());
                 }
             }
         };
@@ -152,11 +168,11 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
             public void firstPage(ToDo[] todos, LinkHeaders linkHeaders, Response response) {
 
                 for (ToDo todo : todos) {
-                    while(true){
+                    while (true) {
                         if (courseList.size() != 0) break;
                     }
                     Date today = new Date();
-                    if(todo.getAssignment().getPointsPossible()==0.0f || todo.getAssignment().getDueDate().before(today))
+                    if (todo.getAssignment().getPointsPossible() == 0.0f || todo.getAssignment().getDueDate().before(today))
                         continue;
                     todoClass todoTemp = new todoClass();
                     todoTemp.isLecture = todo.getAssignment().getTurnInType() == Assignment.TURN_IN_TYPE.EXTERNAL_TOOL;
@@ -198,7 +214,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         addThread.start();
 
 
-        while(true){
+        while (true) {
             if (TOKEN != null) break;
         }
         setUpCanvasAPI();
@@ -209,6 +225,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
             public void run() {
                 /************* Put functions here *************/
                 //Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
+                getbeforeAssignments();
                 getAssignments();
                 checkAlarm();
                 /************* Put functions here *************/
@@ -227,8 +244,8 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
         //Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
-        id=intent.getStringExtra("id");
-        pwd=intent.getStringExtra("pwd");
+        id = intent.getStringExtra("id");
+        pwd = intent.getStringExtra("pwd");
         //return super.onStartCommand(intent,flags,startid);
         return Service.START_REDELIVER_INTENT;
     }
@@ -252,13 +269,19 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 
     @Override
     public void onCallbackFinished(CanvasCallback.SOURCE source) {
-        for(todoClass todos : todolist) {
-            Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
+        class InsertRunnable implements Runnable {
+            @Override
+            public void run() {
+                SKKUassignmentDB.SKKUassignmentDao().nukeTable();
+                for (todoClass todos : todolist) {
+                    Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
 
-            class InsertRunnable implements Runnable {
-                @Override
-                public void run() {
                     SKKUAssignment todoTemp = new SKKUAssignment();
+                    if (assignmentidList.containsKey(todos.assignmentId))
+                        todoTemp.isAlarm = assignmentidList.get(todos.assignmentId);
+                    else
+                        todoTemp.isAlarm = 3;
+
                     todoTemp.isLecture = todos.isLecture;
                     todoTemp.assignmentName = todos.assignmentName;
                     todoTemp.courseName = todos.courseName;
@@ -269,11 +292,10 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                     SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
                 }
             }
-
-            InsertRunnable insertRunnable = new InsertRunnable();
-            Thread addThread = new Thread(insertRunnable);
-            addThread.start();
         }
+        InsertRunnable insertRunnable = new InsertRunnable();
+        Thread addThread = new Thread(insertRunnable);
+        addThread.start();
     }
 
     @Override

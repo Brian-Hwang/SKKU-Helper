@@ -17,6 +17,10 @@ public interface SKKUAssignmentDao {
     @Query("SELECT * FROM SKKUAssignment WHERE assignmentId IN (:assignmentIds)")
     List<SKKUAssignment> loadAllByIds(int[] assignmentIds);
 
+
+    @Query("SELECT * FROM SKKUAssignment WHERE SKKUAssignment.assignmentId == :assignmentid")
+    SKKUAssignment getById(long assignmentid);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(SKKUAssignment SKKUAssignments);
 
@@ -25,4 +29,7 @@ public interface SKKUAssignmentDao {
 
     @Delete
     void delete(SKKUAssignment assignments);
+
+    @Query("DELETE FROM SKKUAssignment")
+    void nukeTable();
 }
