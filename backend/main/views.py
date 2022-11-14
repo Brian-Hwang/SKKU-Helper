@@ -10,7 +10,7 @@ from pymongo import MongoClient
 # Create your views here.
 
 client = MongoClient(
-        host='43.200.180.139', # aws 연동할때 마다 가져오기
+        host='13.124.68.141', # aws 연동할때 마다 가져오기
         port = 27017,
         username = 'se',
         password = '1234'
@@ -42,14 +42,32 @@ def get_notice(request):
     if request.method == 'GET':
         sid = request.GET['student_id']
         tag = request.GET['tag']
-        type = request.GET['type']
-
+        tag = int(tag)
+        type = request.GET['type'] # app에서 요청하는 타입에 따름 0 : 최신 300개(읽지 않은 것 위주)
+        type = int(type)
+        
         db = client.noticeDB
         notice_collection = db.notice
+        student_collection = db.student
+        
+        check_student = student_collection.find({"student_id" : sid}, {"_id":0})
+        
+        last_check_time = []
+        
+        if check_student :
+            old_notice = check_student["read_notices"]
+        else :
+            new_student = {}
+            new_student['student_id'] = sid
+            new_student['read_notices'] = old_notice
+            student_collection.insert(new_student)
 
+        if type == 0:
+            id = notice_collection.find({"tag" : tag} , {"_id" : 0})
+        
         #id = notice_collection.find({"Name" : code, "Date" : { '$gte' : start_date , '$lt': end_date}}, {"_id" : 0, "Name" : 0, "High" : 0 , "Volume" : 0, "Change" : 0 , "Low" : 0 , "Open" : 0 })
         
-        id = notice_collection.find({"tag" : tag} , {"_id" : 0})
+        #id = notice_collection.find({"tag" : tag} , {"_id" : 0})
         
         result = list(id)
         print(result)
@@ -68,6 +86,8 @@ def test_input(request):
         date = request.GET['date']
         link  = request.GET['link']
 
+        tag = int(tag)
+        
         db = client.noticeDB
         notice_collection = db.notice
         data = {'title' : title, 'summarize' : summarize, "tag" : tag, "writer" : writer, "date" : date, "link" : link}
