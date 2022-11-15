@@ -14,7 +14,7 @@ public class Noticedata {
 	public String link = "";
 	public int check = 1; //0:존재 1:최신 2:기한마감
 	
-	Testdata (String title, String sum, int tag, int watch, String wrtier, String date, String link){
+	Noticedata (String title, String sum, int tag, int watch, String wrtier, String date, String link){
 		this.title = title;
 		this.sum = sum;
 		this.tag = tag;

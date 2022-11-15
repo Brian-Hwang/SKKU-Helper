@@ -5,21 +5,21 @@ import androidx.room.PrimaryKey;
 
 import java.util.Date;
 
-package edu.skku.skkuhelper;
-
 import java.util.Date;
 
 
-
+@Entity
 public class SKKUNotice {
-	public String title = "";
-	public String sum = "";
-	public int tag = 0;
-	public int watch = 0;
-	public String writer = "";
-	public String date = "";
-	public String link = "";
-	public int check = 1; //0:존재 1:최신 2:기한마감
+	@PrimaryKey(autoGenerate = false)
+	public long noticeId;
+	public String title;
+	public String sum;
+	public int tag;
+	public int watch;
+	public String writer;
+	public String date;
+	public String link;
+	public int check; //0:존재 1:최신 2:기한마감
 	
 	
 	public String printts(){

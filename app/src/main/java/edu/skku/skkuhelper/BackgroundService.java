@@ -35,6 +35,9 @@ import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
 
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
+import edu.skku.skkuhelper.roomdb.SKKUNotice;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDB;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDao;
 import edu.skku.skkuhelper.roomdb.UserInfoDB;
 import edu.skku.skkuhelper.roomdb.UserInfoDao;
 import retrofit.RetrofitError;
@@ -63,6 +66,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
     UserInfoDB userinfoDB = null;
+    SKKUNoticeDB SKKUnoticeDB = null;   //notice_room
 
     /************* Room DB GLOBAL Variables *************/
     @Override
@@ -191,6 +195,29 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         ToDoAPI.getUserTodos(todosCanvasCallback);
     }
 
+    public void checkNotice() {
+        /*List<SKKUNotice> notices = SKKUnoticeDB.SKKUNoticeDao().getAll();
+        Date currentDate = new Date();
+        if(notices.size()==0){
+            return;
+        }
+        for (int i = 0; i < notices.size(); i++) {
+            SKKUNotice tmp = notices.get(i);
+            String noticeTitle = tmp.title;
+            long alarmType = tmp.check;
+            if(alarmType==1){
+                sendAlarm(noticeTitle,tmp.date,i);
+            }
+//            else if (alarmType!=0){
+//                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
+//                tmp.isAlarm=0;
+//                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
+//            }
+
+        }*/
+    }
+
+
 
     @Override
     public void onCreate() {
@@ -198,6 +225,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         /************* Room DB CREATE START *************/
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
         userinfoDB = UserInfoDB.getInstance(this);
+        SKKUnoticeDB = SKKUNoticeDB.getInstance(this);  //notice_room
         //
         UserInfoDB db = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
         UserInfoDao userInfoDao = db.UserinfoDao();
