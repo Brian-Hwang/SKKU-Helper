@@ -62,6 +62,7 @@ def start_background_process():
         proc.start()
 
     is_start = True
+    logger.info(f"start_background_process()")
     return
 
 def stop_background_process():
@@ -75,6 +76,7 @@ def stop_background_process():
     process_list.clear()
 
     is_start = False
+    logger.info(f"stop_background_process()")
     return
 
 def crawl_and_updateDB():
