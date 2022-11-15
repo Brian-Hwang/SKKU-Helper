@@ -29,22 +29,24 @@ import androidx.room.Room;
 import com.google.android.material.navigation.NavigationView;
 import com.instructure.canvasapi.api.CourseAPI;
 import com.instructure.canvasapi.api.ToDoAPI;
+import com.instructure.canvasapi.api.UserAPI;
 import com.instructure.canvasapi.model.Assignment;
 import com.instructure.canvasapi.model.CanvasError;
 import com.instructure.canvasapi.model.Course;
 import com.instructure.canvasapi.model.ToDo;
+import com.instructure.canvasapi.model.User;
 import com.instructure.canvasapi.utilities.APIHelpers;
 import com.instructure.canvasapi.utilities.APIStatusDelegate;
 import com.instructure.canvasapi.utilities.CanvasCallback;
 import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
 import com.instructure.canvasapi.utilities.LinkHeaders;
+import com.instructure.canvasapi.utilities.UserCallback;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Objects;
-
 
 
 import edu.skku.skkuhelper.roomdb.SKKUNotice;
@@ -68,11 +70,11 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
     LinkedHashMap<Long, String> courseList = new LinkedHashMap<>();
     ArrayList<todoClass> todolist = new ArrayList<>();
-
+    UserCallback userCallback;
     CanvasCallback<Course[]> courseCanvasCallback;
     CanvasCallback<ToDo[]> todosCanvasCallback;
-//    UserCallback userCallback;
-    String userId;
+    //    UserCallback userCallback;
+    String userId=null;
     String userName;
     /************* Canvas API GLOBAL Variables *************/
 
@@ -83,6 +85,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
 
     FragmentManager manager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,31 +109,10 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         toggle.syncState();
         Log.d("TOKEN", TOKEN);
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        class InsertRunnable implements Runnable {
-            @Override
-            public void run() {
-                Log.d("user name and id2 : ", userInfoDao.getAll().size() + "");
-                userId = userInfoDao.getAll().get(0).userId;
-                userName = userInfoDao.getAll().get(0).userName;
-                //Log.d("user name and id", userId + " " + userName);
-                View view = navigationView.getHeaderView(0);
-                TextView textView1 = view.findViewById(R.id.textView);
-                TextView textView2 = view.findViewById(R.id.studentName);
-                textView1.setText(userId);
-                textView2.setText(userName);
-            }
-        }
-        InsertRunnable insertRunnable = new InsertRunnable();
-        Thread addThread = new Thread(insertRunnable);
-        addThread.start();
-        navigationView.setNavigationItemSelectedListener(this);
+
         manager = getSupportFragmentManager();
         Objects.requireNonNull(getSupportActionBar()).setTitle("Lecture/Assignment");
         Log.d("TOKEN", TOKEN);
-
-
-
 
 
         /************* Canvas API CREATE START *************/
@@ -138,19 +120,20 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         //Set up CanvasAPI
         setUpCanvasAPI();
 
-//        userCallback = new UserCallback(Home_page.this) {
-//
-//            @Override
-//            public void cachedUser(User user) {
-//                APIHelpers.setCacheUser(Home_page.this, user);
-//            }
-//
-//            @Override
-//            public void user(User user, Response response) {
-//                userId = user.getLoginId();
-//                userName = user.getName();
-//            }
-//        };
+        userCallback = new UserCallback(Home_page.this) {
+
+            @Override
+            public void cachedUser(User user) {
+                APIHelpers.setCacheUser(Home_page.this, user);
+            }
+
+            @Override
+            public void user(User user, Response response) {
+                Log.d("USERSIG", user.getLoginId());
+                userId = user.getLoginId();
+                userName = user.getName();
+            }
+        };
 
         courseCanvasCallback = new CanvasCallback<Course[]>(this) {
             @Override
@@ -161,7 +144,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             @Override
             public void firstPage(Course[] courses, LinkHeaders linkHeaders, Response response) {
                 for (Course course : courses) {
-                    courseList.put(course.getId(),course.getName());
+                    courseList.put(course.getId(), course.getName());
 
                 }
             }
@@ -176,11 +159,11 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             public void firstPage(ToDo[] todos, LinkHeaders linkHeaders, Response response) {
 
                 for (ToDo todo : todos) {
-                    while(true){
+                    while (true) {
                         if (courseList.size() != 0) break;
                     }
                     Date today = new Date();
-                    if(todo.getAssignment().getPointsPossible()==0.0f || todo.getAssignment().getDueDate().before(today))
+                    if (todo.getAssignment().getPointsPossible() == 0.0f || todo.getAssignment().getDueDate().before(today))
                         continue;
                     todoClass todoTemp = new todoClass();
                     todoTemp.isLecture = todo.getAssignment().getTurnInType() == Assignment.TURN_IN_TYPE.EXTERNAL_TOOL;
@@ -195,27 +178,23 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                 Log.d("size confirm", todolist.size() + "");
             }
         };
-
-//        UserAPI.getSelf(userCallback);
         CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
         ToDoAPI.getUserTodos(todosCanvasCallback);
-
+        UserAPI.getSelf(userCallback);
 
 
         /************* Canvas API CREATE END*************/
-
 
 
     }
 
     @Override
     public void onBackPressed() {
-        Toast toast = Toast.makeText(getApplicationContext(),"뒤로 버튼을 한번 더 누르면 종료합니다.",Toast.LENGTH_SHORT);
+        Toast toast = Toast.makeText(getApplicationContext(), "뒤로 버튼을 한번 더 누르면 종료합니다.", Toast.LENGTH_SHORT);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        }
-        else {
+        } else {
             //뒤로가기 두번 하면 종료
             if (System.currentTimeMillis() > time + 2000) {
                 time = System.currentTimeMillis();
@@ -237,7 +216,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         SharedPreferences.Editor editor;
         SharedPreferences setting;
         setting = getSharedPreferences("setting", 0);
-        editor= setting.edit();
+        editor = setting.edit();
 
         FragmentManager manager = getSupportFragmentManager();
 
@@ -314,31 +293,57 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
     @Override
     public void onCallbackFinished(CanvasCallback.SOURCE source) {
-        for(todoClass todos : todolist) {
-            Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
+        if (courseCanvasCallback.isFinished()) {
+            Log.d("APICALLBACK1", source.name());
+            for (todoClass todos : todolist) {
+                Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
 
-            class InsertRunnable implements Runnable {
+                class InsertRunnable implements Runnable {
+                    @Override
+                    public void run() {
+                        SKKUAssignment todoTemp = new SKKUAssignment();
+                        todoTemp.isLecture = todos.isLecture;
+                        todoTemp.assignmentName = todos.assignmentName;
+                        todoTemp.courseName = todos.courseName;
+                        todoTemp.assignmentId = todos.assignmentId;
+                        todoTemp.courseId = todos.courseId;
+                        todoTemp.dueDate = todos.dueDate;
+                        todoTemp.url = todos.url;
+                        SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
+                    }
+                }
+
+                InsertRunnable insertRunnable = new InsertRunnable();
+                Thread addThread = new Thread(insertRunnable);
+                addThread.start();
+            }
+            manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
+        }
+        if (userId!=null) {
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            Log.d("APICALLBACK2", source.name());
+            class InsertRunnable2 implements Runnable {
                 @Override
                 public void run() {
-                    SKKUAssignment todoTemp = new SKKUAssignment();
-                    todoTemp.isLecture = todos.isLecture;
-                    todoTemp.assignmentName = todos.assignmentName;
-                    todoTemp.courseName = todos.courseName;
-                    todoTemp.assignmentId = todos.assignmentId;
-                    todoTemp.courseId = todos.courseId;
-                    todoTemp.dueDate = todos.dueDate;
-                    todoTemp.url = todos.url;
-                    SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
+                    UserInfo userinfoTemp = new UserInfo();
+                    userinfoTemp.userTOKEN = TOKEN;
+                    userinfoTemp.userId = userId;
+                    userinfoTemp.userName = userName;
+                    userinfoDB.UserinfoDao().insert(userinfoTemp);
+                    runOnUiThread(() -> {
+                        View view = navigationView.getHeaderView(0);
+                        TextView textView1 = view.findViewById(R.id.textView);
+                        TextView textView2 = view.findViewById(R.id.studentName);
+                        textView1.setText(userId);
+                        textView2.setText(userName);
+                    });
                 }
             }
 
-            InsertRunnable insertRunnable = new InsertRunnable();
-            Thread addThread = new Thread(insertRunnable);
-            addThread.start();
+            InsertRunnable2 insertRunnable2 = new InsertRunnable2();
+            Thread addThread2 = new Thread(insertRunnable2);
+            addThread2.start();
         }
-        if (courseCanvasCallback.isFinished())
-            manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
-
     }
 
     @Override
