@@ -33,6 +33,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -42,6 +43,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import edu.skku.skkuhelper.roomdb.SKKUNotice;
@@ -178,62 +180,6 @@ public class MainActivity extends AppCompatActivity {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE);
         /************* Notification builder creation for Notification *************/
-    }
-
-    public void getJson() {
-        SKKUNoticeDB skkuNoticeDB = SKKUNoticeDB.getInstance(this);
-        try {
-            Log.d("SERVERTEST", SB);
-            OkHttpClient client = new OkHttpClient();
-
-            Request request = new Request.Builder()
-                    .url("http://13.124.68.141:8000/notice/get_all?student_id=2022310000&tag_num=4&type=2")
-                    .addHeader("auth", "myAuth")
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-
-            Call call = client.newCall(request);
-            call.enqueue(new Callback() {
-                @Override
-                public void onFailure(Request request, IOException e) {
-                    Log.d("SERVERTEST", request.toString());
-                    Log.d("SERVERTEST", e.toString());
-
-
-                }
-
-                @Override
-                public void onResponse(Response response) throws IOException {
-                    Log.d("SERVERTEST", response.body().string());
-                    new Handler(getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                SKKUNotice noticeTemp = new SKKUNotice();
-                                long noticeId;
-                                String title;
-                                String sum;
-                                int tag;
-                                int watch;
-                                String writer;
-                                Date date;
-                                String link;
-                                int check; //0:존재 1:최신 2:기한마감
-
-                                JSONObject jsonObject = new JSONObject(response.body().string());
-//                                skkuNoticeDB.SKKUnoticeDao().insert(noticeTemp);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-
-                }
-            });
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 }

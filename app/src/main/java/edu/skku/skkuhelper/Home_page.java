@@ -5,6 +5,7 @@ import static java.lang.Thread.sleep;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,7 +43,16 @@ import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
 import com.instructure.canvasapi.utilities.LinkHeaders;
 import com.instructure.canvasapi.utilities.UserCallback;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -192,6 +202,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                 UserAPI.getSelf(userCallback);
                 break;
             }
+//        getJson();
 
         /************* Canvas API CREATE END*************/
 
@@ -292,6 +303,115 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         //You can override the default ErrorDelegate in any CanvasCallBack constructor.
         //In a real application, this should probably be a standalone class.
         APIHelpers.setDefaultErrorDelegateClass(this, this.getClass().getName());
+    }
+    public void getJson() {
+        /*
+        JSONObject jsonObject = null;
+        JSONArray jsonArray = null;
+        JSONObject jsobj = null;
+        */
+
+        try {
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                    .url("http://13.124.68.141:8000/notice/get_all?student_id=2022310000&tag_num=4&type=2")
+                    .addHeader("auth", "myAuth")
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    Log.d("SERVERTEST", request.toString());
+                    Log.d("SERVERTEST", e.toString());
+
+
+                }
+
+                //
+                public void LogLineBreak(String str) {
+                    if (str.length() > 3000) {    // 텍스트가 3000자 이상이 넘어가면 줄
+                        Log.d("servertest", str.substring(0, 3000));
+                        LogLineBreak(str.substring(3000));
+                    } else {
+                        Log.e("servertest", str);
+                    }
+                }
+                //
+
+                @Override
+                public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+                    String rbd = response.body().string();
+                    LogLineBreak(rbd);
+                    //LogLineBreak(response.body().string());
+                    //Log.d("SERVERTEST", response.body().string());
+                    new Handler(getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+
+                                JSONObject jsonObject = new JSONObject(rbd);
+                                //JSONObject jsonObject = new JSONObject(response.body().string());
+                                JSONArray jsonArray = jsonObject.getJSONArray("data");
+                                for (int i=0; i<jsonArray.length();i++) {
+                                    JSONObject jsobj = jsonArray.getJSONObject(i);
+                                    long noticeid = jsobj.getLong("id_server_notice");
+
+                                    String title = jsobj.getString("title");
+                                    String sum = jsobj.getString("summary");
+                                    int tag = jsobj.getInt("tag_num");
+                                    int watch = jsobj.getInt("watch");
+                                    String writer = jsobj.getString("writer");
+                                    String ddate = jsobj.getString("date");
+                                    String link = jsobj.getString("link");
+                                    int check = 1;
+
+                                    LogLineBreak(title);
+                                    LogLineBreak(sum);
+                                    String tagstr = String.valueOf(tag);
+                                    Log.d("servertest",tagstr);
+                                    String watchstr = String.valueOf(watch);
+                                    Log.d("servertest",watchstr);
+                                    Log.d("servertest",writer);
+                                    Log.d("servertest",ddate);
+                                    Log.d("servertest",link);
+
+
+
+                                    // 포맷터
+                                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+                                    // 문자열 -> Date
+                                    Date date = formatter.parse(ddate);
+
+                                    SimpleDateFormat transFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+                                    String testdate = transFormat.format(date);
+
+
+                                    Log.d("servertest",testdate);
+                                    Log.d("servertest",ddate);
+
+
+
+                                }
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    });
+
+
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
