@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         pwd="testPwd";
         startIntent.putExtra("id",id);
         startIntent.putExtra("pwd",pwd);
-        startService(startIntent);
+        startForegroundService(startIntent);
         /* service terminate */
         /* how to quit background service */
         /*testBtn.setOnClickListener(new View.OnClickListener(){
