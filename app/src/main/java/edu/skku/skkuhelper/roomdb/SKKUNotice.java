@@ -5,7 +5,48 @@ import androidx.room.PrimaryKey;
 
 import java.util.Date;
 
+package edu.skku.skkuhelper;
 
+import java.util.Date;
+
+
+
+public class SKKUNotice {
+	public String title = "";
+	public String sum = "";
+	public int tag = 0;
+	public int watch = 0;
+	public String writer = "";
+	public String date = "";
+	public String link = "";
+	public int check = 1; //0:존재 1:최신 2:기한마감
+	
+	
+	public String printts(){
+		return "\"title\":"+title+","+"\"check\":"+check+"\"sum\":"+sum;
+	}
+	
+	/*
+	public void input(String[] inputdata){	
+		this.title = title;
+		this.sum = sum;
+		this.writer = writer;
+	}
+	*/
+	public void makezero() {
+		this.check = 0;
+	}
+	public void makeone() {
+		this.check = 1;
+	}
+	
+	/*
+	public Long Alarm(int check){
+		return 123L;
+	}
+	*/
+}
+/*
 @Entity
 public class SKKUNotice {
     @PrimaryKey(autoGenerate = false)
@@ -36,5 +77,6 @@ public class SKKUNotice {
 	
     //public long isAlarm;
 }
+*/
 
 

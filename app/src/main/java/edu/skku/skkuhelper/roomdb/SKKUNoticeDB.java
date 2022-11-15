@@ -27,5 +27,7 @@ public abstract class SKKUNoticeDB extends RoomDatabase {
         }
         return database;
     }
-
+	public static void destroydatabase() {
+        database = null;
+    }
 }
