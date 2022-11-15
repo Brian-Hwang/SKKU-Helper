@@ -5,7 +5,8 @@ from rest_framework.decorators import api_view
 from django.http.response import JsonResponse, HttpResponse
 import json
 from pymongo import MongoClient
-
+from .crawler import start_background_process
+from .crawler import stop_background_process
 
 # Create your views here.
 
@@ -111,3 +112,15 @@ def test_input(request):
             return JsonResponse({"Result" : True})
         else:
             return JsonResponse({"Result": False})
+
+@api_view(['GET', 'POST'])
+def start_background(request):
+    if request.method == 'GET':
+        start_background_process()
+        return JsonResponse({"Result": True})
+
+@api_view(['GET', 'POST'])
+def stop_background(request):
+    if request.method == 'GET':
+        stop_background_process()
+        return JsonResponse({"Result": True})
