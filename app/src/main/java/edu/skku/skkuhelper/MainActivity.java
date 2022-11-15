@@ -180,24 +180,7 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         /************* Channel creation for Notification END *************/
 
 
-        /************* Example of Background Service *************/
-        /* service start */
-        Intent startIntent = new Intent(this, BackgroundService.class);
-        id="testId";
-        pwd="testPwd";
-        startIntent.putExtra("id",id);
-        startIntent.putExtra("pwd",pwd);
-        startService(startIntent);
-        /* service terminate */
-        /* how to quit background service */
-        /*testBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
-                stopService(intent);
-            }
-        });*/
-        /************* Example of Background Service *************/
+
 
         /************* Notification builder creation for Notification *************/
         // Create an explicit intent for an Activity in your app

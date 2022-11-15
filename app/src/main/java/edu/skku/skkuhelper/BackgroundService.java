@@ -1,5 +1,9 @@
 package edu.skku.skkuhelper;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.*;
@@ -257,10 +261,10 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 getAssignments();
                 checkAlarm();
                 /************* Put functions here *************/
-                handler.postDelayed(runnable, 10000);    //min*60000, 30min=>1800000
+                handler.postDelayed(runnable, 30000);    //min*60000, 30min=>1800000
             }
         };
-        handler.postDelayed(runnable, 10000);
+        handler.postDelayed(runnable, 30000);
     }
 
     @Override
@@ -272,10 +276,10 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
         //Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
-        id = intent.getStringExtra("id");
-        pwd = intent.getStringExtra("pwd");
+        startForegroundService();
         //return super.onStartCommand(intent,flags,startid);
-        return Service.START_REDELIVER_INTENT;
+        //return Service.START_REDELIVER_INTENT;
+        return START_STICKY;
     }
 
 
@@ -319,6 +323,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                     todoTemp.url = todos.url;
                     SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
                 }
+                todolist.clear();
             }
         }
         InsertRunnable insertRunnable = new InsertRunnable();
@@ -366,6 +371,19 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 
     }
     //
-
+    private void startForegroundService() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "default");
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setContentTitle("SKKU-Helper");
+        builder.setContentText("Service providing");
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, FLAG_IMMUTABLE);
+        builder.setContentIntent(pendingIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+            manager.createNotificationChannel(new NotificationChannel("default", "기본 채널",NotificationManager.IMPORTANCE_DEFAULT));
+        }
+        startForeground(1, builder.build());
+    }
 
 }

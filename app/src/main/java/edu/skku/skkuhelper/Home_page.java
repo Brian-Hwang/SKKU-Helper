@@ -106,6 +106,12 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         toggle.syncState();
         Log.d("TOKEN", TOKEN);
 
+        /************* Example of Background Service *************/
+        /* service start */
+        Intent startIntent = new Intent(this, BackgroundService.class);
+        startForegroundService(startIntent);
+        /************* Example of Background Service *************/
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         class InsertRunnable implements Runnable {
             @Override
