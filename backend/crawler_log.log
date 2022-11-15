@@ -1,0 +1,15 @@
+[2022-11-15 03:12:03,919][INFO|crawler.py:82] >> start to get notice_list
+[2022-11-15 03:20:30,927][INFO|crawler.py:82] >> start to get notice_list
+[2022-11-15 03:21:16,017][INFO|crawler.py:88] >> got all notice_list... skku : 350, cs : 150, total : 500
+[2022-11-15 03:21:16,021][INFO|crawler.py:320] >> start update DB
+[2022-11-15 03:21:17,730][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 812 
+[2022-11-15 03:21:18,962][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 813 
+[2022-11-15 03:21:20,181][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 814 
+[2022-11-15 03:21:21,411][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 815 
+[2022-11-15 03:21:22,624][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 816 
+[2022-11-15 03:21:23,844][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 817 
+[2022-11-15 03:21:25,070][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 818 
+[2022-11-15 03:21:26,288][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 819 
+[2022-11-15 03:21:27,526][INFO|crawler.py:383] >> insert new info to DB / id_server_notice : 820 
+[2022-11-15 03:21:27,526][INFO|crawler.py:385] >> all fin... count1 : 491, count2 : 9, count3 : 0, 전체 notice_list : 500
+[2022-11-15 03:21:27,526][INFO|crawler.py:386] >> crawl_and_updateDB_interval : 1800
