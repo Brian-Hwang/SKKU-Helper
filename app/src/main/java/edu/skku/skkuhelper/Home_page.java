@@ -45,6 +45,11 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
+
+
+import edu.skku.skkuhelper.roomdb.SKKUNotice;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDB;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDao;
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDao;
