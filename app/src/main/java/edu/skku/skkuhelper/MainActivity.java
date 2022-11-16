@@ -2,8 +2,6 @@ package edu.skku.skkuhelper;
 
 import static java.lang.Thread.sleep;
 
-import static edu.skku.skkuhelper.Home_page.DOMAIN;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,14 +9,31 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.instructure.canvasapi.api.UserAPI;
+import com.instructure.canvasapi.model.CanvasError;
+import com.instructure.canvasapi.model.User;
+import com.instructure.canvasapi.utilities.APIHelpers;
+import com.instructure.canvasapi.utilities.APIStatusDelegate;
+import com.instructure.canvasapi.utilities.CanvasCallback;
+import com.instructure.canvasapi.utilities.CanvasRestAdapter;
+import com.instructure.canvasapi.utilities.ErrorDelegate;
+import com.instructure.canvasapi.utilities.UserCallback;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.room.Room;
+
+import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
+import edu.skku.skkuhelper.roomdb.UserInfo;
+import edu.skku.skkuhelper.roomdb.UserInfoDB;
+import edu.skku.skkuhelper.roomdb.UserInfoDao;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 import android.widget.Button;
 import android.widget.Toast;
@@ -28,51 +43,19 @@ import android.widget.EditText;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
-
-import com.instructure.canvasapi.utilities.APIHelpers;
-import com.instructure.canvasapi.utilities.CanvasRestAdapter;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import edu.skku.skkuhelper.roomdb.SKKUNotice;
-import edu.skku.skkuhelper.roomdb.SKKUNoticeDB;
-import edu.skku.skkuhelper.roomdb.SKKUNoticeDao;
-
-public class MainActivity extends AppCompatActivity {
-    private String id, pwd;
+public class MainActivity extends AppCompatActivity{
+    private String id,pwd;
 
     EditText editTextToken;
     Button btnLogin;
-    /************* Canvas API GLOBAL Variables *************/
-    public static String TOKEN = null;
-    /************* Canvas API GLOBAL Variables *************/
-    /************* SERVER API GLOBAL Variables *************/
-    String SB = "12";
 
-    /************* SERVER API GLOBAL Variables *************/
+    public static String TOKEN=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.d("SERVERTEST", SB);
-
+//        stopService(new Intent(MainActivity.this,BackgroundService.class));
 
         btnLogin = findViewById(R.id.buttonLogin);
         editTextToken = findViewById(R.id.editTextPassword);
@@ -81,11 +64,12 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor;
         Auto_LogIn = (CheckBox) findViewById(R.id.check);
         setting = getSharedPreferences("setting", 0);
-        editor = setting.edit();
-//        getJson();
-        if (setting.getString("TOKEN", null) != null) {
+        editor= setting.edit();
+
+        if(setting.getString("TOKEN",null) != null) {
+
             Intent intent = new Intent(MainActivity.this, Home_page.class);
-            intent.putExtra("TOKEN", setting.getString("TOKEN", ""));
+            intent.putExtra("TOKEN",setting.getString("TOKEN",""));
             startActivity(intent);
         }
 
@@ -93,11 +77,15 @@ public class MainActivity extends AppCompatActivity {
         Auto_LogIn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+                // TODO Auto-generated method stub
+                if(isChecked){
+
                     String TOKEN = editTextToken.getText().toString();
                     editor.putString("TOKEN", TOKEN);
+                   // editor.putBoolean("Auto_Login_enabled", true);
                     editor.apply();
-                } else {
+                }
+                else{
                     editor.clear();
                     editor.apply();
                 }
@@ -113,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast toast = Toast.makeText(getApplicationContext(), "Please Enter TOKEN", Toast.LENGTH_SHORT);
                     toast.show();
                 } else {
+                    Log.d("asdf","main");
                     Intent intent = new Intent(MainActivity.this, Home_page.class);
                     intent.putExtra("TOKEN", setting.getString("TOKEN", ""));
                     startActivity(intent);
@@ -120,6 +109,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+       
+
 
         /************* Channel creation for Notification START *************/
         CharSequence name = getString(R.string.channel_name);
@@ -132,51 +123,16 @@ public class MainActivity extends AppCompatActivity {
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
         /************* Channel creation for Notification END *************/
-//        /************* Example of Background Service *************/
-//        /* service start */
-//        Intent startIntent = new Intent(this, BackgroundService.class);
-//        id="testId";
-//        pwd="testPwd";
-//        startIntent.putExtra("id",id);
-//        startIntent.putExtra("pwd",pwd);
-//        startService(startIntent);
-//        /* service terminate */
-//        /* how to quit background service */
-//        /*testBtn.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
-//                stopService(intent);
-//            }
-//        });*/
-//        /************* Example of Background Service *************/
-
-        /************* Example of Background Service *************/
-        /* service start */
-//        Intent startIntent = new Intent(this, BackgroundService.class);
-//        id="testId";
-//        pwd="testPwd";
-//        startIntent.putExtra("id",id);
-//        startIntent.putExtra("pwd",pwd);
-//        startService(startIntent);
-        /* service terminate */
-        /* how to quit background service */
-        /*testBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
-                stopService(intent);
-            }
-        });*/
-        /************* Example of Background Service *************/
 
 
-        /************* Notification builder creation for Notification *************/
-        // Create an explicit intent for an Activity in your app
-        //TODO change Intent activity to class specificaiton
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+
+//        /************* Notification builder creation for Notification *************/
+//        // Create an explicit intent for an Activity in your app
+//        //TODO change Intent activity to class specificaiton
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         /*NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -193,59 +149,4 @@ public class MainActivity extends AppCompatActivity {
         notificationManagercompat.notify(1, builder.build());*/
         /************* Example of Notification *************/
     }
-
-    /**
-     * This is all stuff that should only need to be called once for the entire project.
-     */
-    public void setUpCanvasAPI() {
-        //Set up the Canvas Rest Adapter.
-        CanvasRestAdapter.setupInstance(this, TOKEN, DOMAIN);
-        //Set up a default error delegate. This will be the same one for all API calls
-        //You can override the default ErrorDelegate in any CanvasCallBack constructor.
-        //In a real application, this should probably be a standalone class.
-        APIHelpers.setDefaultErrorDelegateClass(this, this.getClass().getName());
-    }
-//    @Override
-//    public void onCallbackStarted() {
-//        btnLogin.setEnabled(false);
-//    }
-//
-//    @Override
-//    public void onCallbackFinished(CanvasCallback.SOURCE source) {
-//        if(userId==null){
-//            Toast toast = Toast.makeText(getApplicationContext(),"INVALID TOKEN",Toast.LENGTH_SHORT);
-//            toast.show();
-//        }
-//        btnLogin.setEnabled(true);
-//
-//    }
-//
-//    @Override
-//    public void onNoNetwork() {
-//
-//    }
-//
-//    @Override
-//    public Context getContext() {
-//        return this;
-//    }
-//
-//    @Override
-//    public void noNetworkError(RetrofitError retrofitError, Context context) {
-//        Log.d(APIHelpers.LOG_TAG, "There was no network");
-//
-//    }
-//
-//    @Override
-//    public void notAuthorizedError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
-//        Log.d(APIHelpers.LOG_TAG, "HTTP 401");
-//
-//    }
-//
-//    @Override
-//    public void invalidUrlError(RetrofitError retrofitError, Context context) {
-//        Log.d(APIHelpers.LOG_TAG, "HTTP 404");
-//
-//    }
-//
 }

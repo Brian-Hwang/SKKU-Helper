@@ -20,4 +20,3 @@ public class SKKUNotice {
 	public int check; //0:존재 1:최신 2:기한마감
 
 }
-

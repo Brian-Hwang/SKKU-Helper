@@ -35,5 +35,4 @@ public interface SKKUAssignmentDao {
 
     @Query("SELECT COUNT(SKKUAssignment.assignmentId) FROM SKKUAssignment")
     int getRowCount();
-
 }

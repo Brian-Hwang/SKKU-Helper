@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.lifecycle.Lifecycle;
 import androidx.room.Room;
 
 import com.instructure.canvasapi.api.CourseAPI;
@@ -66,7 +67,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     public Context context = this;
     public Handler handler = null;
     public static Runnable runnable = null;
-    private String id, pwd;                         //log-in info
+    private String id, pwd;
     boolean isNukeFinished = false;
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
@@ -152,10 +153,18 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 for (SKKUAssignment temp : listTemp) {
                     assignmentidList.put(temp.assignmentId, temp.isAlarm);
                 }
+                Log.d("asdf","put");
+//                SKKUassignmentDB.SKKUassignmentDao().nukeTable();
+
+//                    if(SKKUassignmentDB.SKKUassignmentDao().getRowCount()==0) {
+//                        isNukeFinished = true;
+//                        break;
+//                    }
                 SKKUassignmentDB.SKKUassignmentDao().nukeTable();
                 while(true){
                     if(SKKUassignmentDB.SKKUassignmentDao().getRowCount()==0) {
                         isNukeFinished = true;
+                        Log.d("asdf","nuke");
                         break;
                     }
                 }
@@ -165,7 +174,11 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         InsertRunnable insertRunnable = new InsertRunnable();
         Thread addThread = new Thread(insertRunnable);
         addThread.start();
-
+//        try {
+//            addThread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void getAssignments() {
@@ -241,15 +254,21 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     @Override
     public void onCreate() {
         ///Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
-
         //
         handler = new Handler();
+        Log.d("asdf","background?");
         runnable = new Runnable() {
             public void run() {
                 /************* Put functions here *************/
                 //Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
                 getbeforeAssignments();
-                getAssignments();
+                while(true){
+                    if (isNukeFinished){
+                        Log.d("asdf","TRUE");
+                        getAssignments();
+                        break;
+                    }
+                }
 
                 //checkAlarm();
                 /************* Put functions here *************/
