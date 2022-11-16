@@ -43,27 +43,19 @@ import android.widget.EditText;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
-public class MainActivity extends AppCompatActivity implements APIStatusDelegate, ErrorDelegate  {
+public class MainActivity extends AppCompatActivity{
     private String id,pwd;
 
     EditText editTextToken;
     Button btnLogin;
-    /************* Canvas API GLOBAL Variables *************/
-    UserCallback userCallback;
-    String userId=null;
-    String userName=null;
+
     public static String TOKEN=null;
-    public final static String DOMAIN = "https://canvas.skku.edu/";
-    boolean isCallbackFinished = false;
-    /************* Canvas API GLOBAL Variables *************/
-    /************* Room DB GLOBAL Variables *************/
-    UserInfoDB userinfoDB = null;
-    /************* Room DB GLOBAL Variables *************/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+//        stopService(new Intent(MainActivity.this,BackgroundService.class));
 
         btnLogin = findViewById(R.id.buttonLogin);
         editTextToken = findViewById(R.id.editTextPassword);
@@ -73,55 +65,6 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         Auto_LogIn = (CheckBox) findViewById(R.id.check);
         setting = getSharedPreferences("setting", 0);
         editor= setting.edit();
-
-        /************* Room DB CREATE START *************/
-        userinfoDB = UserInfoDB.getInstance(this);
-        UserInfoDB Infodb = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
-        UserInfoDao userinfoDao = Infodb.UserinfoDao();
-        /************* Room DB CREATE END *************/
-
-        /************* Canvas API CREATE START *************/
-
-
-
-        userCallback = new UserCallback(MainActivity.this) {
-
-            @Override
-            public void cachedUser(User user) {
-                APIHelpers.setCacheUser(MainActivity.this, user);
-            }
-
-            @Override
-            public void user(User user, Response response) {
-                userId = user.getLoginId();
-                userName = user.getName();
-
-                class InsertRunnable2 implements Runnable {
-                    @Override
-                    public void run() {
-                        UserInfo userinfoTemp = new UserInfo();
-                        userinfoTemp.userTOKEN = TOKEN;
-                        userinfoTemp.userId = userId;
-                        userinfoTemp.userName = userName;
-                        userinfoDB.UserinfoDao().insert(userinfoTemp);
-                    }
-                }
-
-                InsertRunnable2 insertRunnable2 = new InsertRunnable2();
-                Thread addThread2 = new Thread(insertRunnable2);
-                addThread2.start();
-
-
-
-                //login success
-                Intent intent = new Intent(MainActivity.this, Home_page.class);
-                intent.putExtra("TOKEN", TOKEN);
-                startActivity(intent);
-//                isCallbackFinished
-
-            }
-        };
-        /************* Canvas API CREATE END*************/
 
         if(setting.getString("TOKEN",null) != null) {
 
@@ -154,12 +97,14 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
 
                 TOKEN = editTextToken.getText().toString();
                 //Set up CanvasAPI
-                if(!TOKEN.equals("")){
-                setUpCanvasAPI();
-                UserAPI.getSelf(userCallback);}
-                else{
-                    Toast toast = Toast.makeText(getApplicationContext(),"Please Enter TOKEN",Toast.LENGTH_SHORT);
+                if (TOKEN.equals("")) {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Please Enter TOKEN", Toast.LENGTH_SHORT);
                     toast.show();
+                } else {
+                    Log.d("asdf","main");
+                    Intent intent = new Intent(MainActivity.this, Home_page.class);
+                    intent.putExtra("TOKEN", setting.getString("TOKEN", ""));
+                    startActivity(intent);
                 }
 
             }
@@ -182,12 +127,12 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
 
 
 
-        /************* Notification builder creation for Notification *************/
-        // Create an explicit intent for an Activity in your app
-        //TODO change Intent activity to class specificaiton
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+//        /************* Notification builder creation for Notification *************/
+//        // Create an explicit intent for an Activity in your app
+//        //TODO change Intent activity to class specificaiton
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         /*NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -203,71 +148,5 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         // notificationId is a unique int for each notification that you must define
         notificationManagercompat.notify(1, builder.build());*/
         /************* Example of Notification *************/
-    }
-
-    /**
-     * This is all stuff that should only need to be called once for the entire project.
-     */
-    public void setUpCanvasAPI() {
-        //Set up the Canvas Rest Adapter.
-        CanvasRestAdapter.setupInstance(this, TOKEN, DOMAIN);
-        //Set up a default error delegate. This will be the same one for all API calls
-        //You can override the default ErrorDelegate in any CanvasCallBack constructor.
-        //In a real application, this should probably be a standalone class.
-        APIHelpers.setDefaultErrorDelegateClass(this, this.getClass().getName());
-    }
-    @Override
-    public void onCallbackStarted() {
-        btnLogin.setEnabled(false);
-    }
-
-    @Override
-    public void onCallbackFinished(CanvasCallback.SOURCE source) {
-        if(userId==null){
-            Toast toast = Toast.makeText(getApplicationContext(),"INVALID TOKEN",Toast.LENGTH_SHORT);
-            toast.show();
-        }
-        btnLogin.setEnabled(true);
-
-    }
-
-    @Override
-    public void onNoNetwork() {
-
-    }
-
-    @Override
-    public Context getContext() {
-        return this;
-    }
-
-    @Override
-    public void noNetworkError(RetrofitError retrofitError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "There was no network");
-
-    }
-
-    @Override
-    public void notAuthorizedError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 401");
-
-    }
-
-    @Override
-    public void invalidUrlError(RetrofitError retrofitError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 404");
-
-    }
-
-    @Override
-    public void serverError(RetrofitError retrofitError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 500");
-
-    }
-
-    @Override
-    public void generalError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 200 but something went wrong. Probably a GSON parse error.");
-
     }
 }

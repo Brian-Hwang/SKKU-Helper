@@ -12,14 +12,14 @@ import androidx.room.TypeConverters;
 
 public abstract class SKKUNoticeDB extends RoomDatabase {
     private static SKKUNoticeDB database = null;
-	//수정필요
+    //수정필요
     public abstract SKKUNoticeDao SKKUnoticeDao();
 
 
     public static SKKUNoticeDB getInstance(Context context) {
         if (database == null) {
             database = Room.databaseBuilder(context.getApplicationContext(),
-                    SKKUNoticeDB.class, "SKKUNotice.db")
+                            SKKUNoticeDB.class, "SKKUNotice.db")
                     .allowMainThreadQueries()
                     .fallbackToDestructiveMigration()
                     .build();
@@ -27,7 +27,7 @@ public abstract class SKKUNoticeDB extends RoomDatabase {
         }
         return database;
     }
-	public static void destroydatabase() {
+    public static void destroyInstance() {
         database = null;
     }
 }
