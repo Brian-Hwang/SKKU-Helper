@@ -2,6 +2,8 @@ package edu.skku.skkuhelper;
 
 import static java.lang.Thread.sleep;
 
+import static edu.skku.skkuhelper.Home_page.DOMAIN;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -27,6 +29,8 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
 
+import com.instructure.canvasapi.utilities.APIHelpers;
+import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
