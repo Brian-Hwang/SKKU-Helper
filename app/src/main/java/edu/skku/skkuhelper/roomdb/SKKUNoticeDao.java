@@ -18,6 +18,9 @@ public interface SKKUNoticeDao {
     @Query("SELECT * FROM SKKUNotice WHERE noticeid IN (:noticeids)")
     List<SKKUNotice> loadAllByIds(int[] noticeids);
 
+    @Query("SELECT * FROM SKKUNotice WHERE SKKUNotice.noticeId == :noticeid")
+    SKKUNotice getById(long noticeid);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(SKKUNotice SKKUNotices);
 

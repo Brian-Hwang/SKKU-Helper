@@ -28,7 +28,16 @@ import com.instructure.canvasapi.utilities.CanvasCallback;
 import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
 import com.instructure.canvasapi.utilities.LinkHeaders;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -38,6 +47,10 @@ import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
 //import edu.skku.skkuhelper.roomdb.UserinfoDB;
 
+
+import edu.skku.skkuhelper.roomdb.SKKUNotice;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDB;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDao;
 import edu.skku.skkuhelper.roomdb.SKKUAssignment;
 import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
 import edu.skku.skkuhelper.roomdb.SKKUNotice;
@@ -69,6 +82,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     public static Runnable runnable = null;
     private String id, pwd;
     boolean isNukeFinished = false;
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
     UserInfoDB userinfoDB = null;
@@ -84,8 +98,8 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     public void checkAlarm() {
         List<SKKUAssignment> assignments = SKKUassignmentDB.SKKUassignmentDao().getAll();
         Date currentDate = new Date();
-        for (int i = 0; i < assignments.size(); i++) {
-            SKKUAssignment tmp = assignments.get(i);
+        for (int i = 1; i < assignments.size()+1; i++) {
+            SKKUAssignment tmp = assignments.get(i-1);
             Date dueDate = tmp.dueDate;
             String assignmentName = tmp.assignmentName;
             String courseName = tmp.courseName;
@@ -143,6 +157,154 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         /************* Example of Notification *************/
         //Log.d("alarm", title);
     }
+    //
+
+    public void getJson() {
+        Log.d("servertest","asdf");
+        try {
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                    .url("http://13.124.68.141:8000/notice/get_all" +
+                            "?student_id=2022310000&tag_num=0&type=0")
+                    .addHeader("auth", "myAuth")
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    Log.d("SERVERTEST", request.toString());
+                    Log.d("SERVERTEST", e.toString());
+
+
+                }
+
+                //
+                public void LogLineBreak(String str) {
+                    if (str.length() > 3000) {    // 텍스트가 3000자 이상이 넘어가면 줄
+                        Log.d("servertest", str.substring(0, 3000));
+                        LogLineBreak(str.substring(3000));
+                    } else {
+                        Log.e("servertest", str);
+                    }
+                }
+                //
+
+                @Override
+                public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+                    String rbd = response.body().string();
+
+                    //LogLineBreak(rbd);
+                    //LogLineBreak(response.body().string());
+                    //Log.d("SERVERTEST", response.body().string());
+                    new Handler(getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+
+                                JSONObject jsonObject = new JSONObject(rbd);
+                                //JSONObject jsonObject = new JSONObject(response.body().string());
+                                JSONArray jsonArray = jsonObject.getJSONArray("data");
+                                Log.d("servertest",String.valueOf(jsonArray.length()));
+                                for (int i=0; i<jsonArray.length();i++) {
+                                    SKKUNotice noticetemp = new SKKUNotice();
+                                    JSONObject jsobj = jsonArray.getJSONObject(i);
+                                    noticetemp.noticeId = jsobj.getLong("id_server_notice");
+                                    //String idstr = String.valueOf(noticeid);
+                                    //Log.d("servertest", "this is data whose id is "+idstr+" and index is "+String.valueOf(i));
+                                    SKKUNotice noticebefore = SKKUnoticeDB.SKKUnoticeDao().getById(noticetemp.noticeId);
+                                    //기존아이디가 있으면 체크넘버 0으로 갱신
+                                    if(noticebefore!=null) {
+                                        //noticebefore.check = 0;
+                                        SKKUnoticeDB.SKKUnoticeDao().update(noticebefore);
+
+                                    } else { //없으면 체크넘버 1로 받음
+
+                                        noticetemp.title = jsobj.getString("title");
+                                        noticetemp.sum = jsobj.getString("summary");
+                                        noticetemp.tag = jsobj.getInt("tag_num");
+                                        noticetemp.watch = jsobj.getInt("watch");
+                                        noticetemp.writer = jsobj.getString("writer");
+                                        noticetemp.link = jsobj.getString("link");
+                                        noticetemp.check = 1;
+                                        LogLineBreak(noticetemp.title); //test용
+                                        Log.d("severtest",String.valueOf(noticetemp.check)); //test용
+                                        noticetemp.date = formatter.parse(jsobj.getString("date")); //실제 사용할 date
+                                        SKKUnoticeDB.SKKUnoticeDao().insert(noticetemp);
+
+
+                                    }
+
+
+
+
+
+                                }
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    });
+
+
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void checkNotice() {
+        List<SKKUNotice> notices = SKKUnoticeDB.SKKUnoticeDao().getAll();
+        Log.d("asdf",String.valueOf(notices.size()));
+        int cnt=0;
+        for (int i = 0; i < notices.size(); i++) {
+            SKKUNotice tmp = notices.get(i);
+            int alarmType = tmp.check;
+            if (alarmType == 1) {
+                cnt++;
+                tmp.check = 0;
+                SKKUnoticeDB.SKKUnoticeDao().update(tmp);
+            }
+        }
+        if(cnt!=0) {
+            sendNoticeAlarm("새로운 공지가 " + String.valueOf(cnt) + "개 있습니다.");
+        }
+    }
+
+    //
+    /**** 공지용추가중 ****/
+    //title=("New Notice!"), String contents="새로운 공지가 "+신규공지개수+"개 있습니다.", id=0;
+    //사용법 sendNoticeAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
+    public void sendNoticeAlarm(String contents) {
+        /************* Notification builder creation for Notification *************/
+        // Create an explicit intent for an Activity in your app
+        //TODO change Intent activity to class specificaiton
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("New Notice!")
+                .setContentText(contents)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE);
+        /************* Notification builder creation for Notification *************/
+
+
+        /************* Example of Notification *************/
+        NotificationManagerCompat notificationManagercompat = NotificationManagerCompat.from(this);
+        // notificationId is a unique int for each notification that you must define
+        notificationManagercompat.notify(0, builder.build());
+        /************* Example of Notification *************/
+        //Log.d("alarm", title);
+    }
+    /***** 추가중 *****/
 
     public void getbeforeAssignments() {
 
@@ -227,27 +389,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         ToDoAPI.getUserTodos(todosCanvasCallback);
     }
 
-    public void checkNotice() {
-        /*List<SKKUNotice> notices = SKKUnoticeDB.SKKUNoticeDao().getAll();
-        Date currentDate = new Date();
-        if(notices.size()==0){
-            return;
-        }
-        for (int i = 0; i < notices.size(); i++) {
-            SKKUNotice tmp = notices.get(i);
-            String noticeTitle = tmp.title;
-            long alarmType = tmp.check;
-            if(alarmType==1){
-                sendAlarm(noticeTitle,tmp.date,i);
-            }
-//            else if (alarmType!=0){
-//                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-//                tmp.isAlarm=0;
-//                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-//            }
 
-        }*/
-    }
 
 
 
@@ -269,13 +411,15 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                         break;
                     }
                 }
-
+                Log.d("asdf","TRUE");
+                getJson();
+                checkNotice();
                 //checkAlarm();
                 /************* Put functions here *************/
-                handler.postDelayed(runnable, 3600000);    //min*60000, 1 hr=>3600000
+                handler.postDelayed(runnable, 1000);    //min*60000, 1 hr=>3600000
             }
         };
-        handler.postDelayed(runnable, 3600000);
+        handler.postDelayed(runnable, 1000);
     }
 
     @Override
@@ -295,6 +439,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         //
         UserInfoDB db = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
         UserInfoDao userInfoDao = db.UserinfoDao();
+
         /************* Room DB CREATE END *************/
         /************* Canvas API CREATE START *************/
         class InsertRunnable implements Runnable {
