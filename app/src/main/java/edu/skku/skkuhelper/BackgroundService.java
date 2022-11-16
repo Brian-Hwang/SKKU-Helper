@@ -67,6 +67,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     public Handler handler = null;
     public static Runnable runnable = null;
     private String id, pwd;                         //log-in info
+    boolean isNukeFinished = false;
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
     UserInfoDB userinfoDB = null;
@@ -151,11 +152,20 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 for (SKKUAssignment temp : listTemp) {
                     assignmentidList.put(temp.assignmentId, temp.isAlarm);
                 }
+                SKKUassignmentDB.SKKUassignmentDao().nukeTable();
+                while(true){
+                    if(SKKUassignmentDB.SKKUassignmentDao().getRowCount()==0) {
+                        isNukeFinished = true;
+                        break;
+                    }
+                }
+
             }
         }
         InsertRunnable insertRunnable = new InsertRunnable();
         Thread addThread = new Thread(insertRunnable);
         addThread.start();
+
     }
 
     public void getAssignments() {
@@ -310,7 +320,6 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         class InsertRunnable implements Runnable {
             @Override
             public void run() {
-                SKKUassignmentDB.SKKUassignmentDao().nukeTable();
                 for (todoClass todos : todolist) {
                     Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
                     SKKUAssignment todoTemp = new SKKUAssignment();

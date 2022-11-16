@@ -9,31 +9,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.instructure.canvasapi.api.UserAPI;
-import com.instructure.canvasapi.model.CanvasError;
-import com.instructure.canvasapi.model.User;
-import com.instructure.canvasapi.utilities.APIHelpers;
-import com.instructure.canvasapi.utilities.APIStatusDelegate;
-import com.instructure.canvasapi.utilities.CanvasCallback;
-import com.instructure.canvasapi.utilities.CanvasRestAdapter;
-import com.instructure.canvasapi.utilities.ErrorDelegate;
-import com.instructure.canvasapi.utilities.UserCallback;
-
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.room.Room;
-
-import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
-import edu.skku.skkuhelper.roomdb.UserInfo;
-import edu.skku.skkuhelper.roomdb.UserInfoDB;
-import edu.skku.skkuhelper.roomdb.UserInfoDao;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 import android.widget.Button;
 import android.widget.Toast;
@@ -43,26 +26,48 @@ import android.widget.EditText;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
-public class MainActivity extends AppCompatActivity implements APIStatusDelegate, ErrorDelegate  {
-    private String id,pwd;
+
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import edu.skku.skkuhelper.roomdb.SKKUNotice;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDB;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDao;
+
+public class MainActivity extends AppCompatActivity {
+    private String id, pwd;
 
     EditText editTextToken;
     Button btnLogin;
     /************* Canvas API GLOBAL Variables *************/
-    UserCallback userCallback;
-    String userId=null;
-    String userName=null;
-    public static String TOKEN=null;
-    public final static String DOMAIN = "https://canvas.skku.edu/";
-    boolean isCallbackFinished = false;
+    public static String TOKEN = null;
     /************* Canvas API GLOBAL Variables *************/
-    /************* Room DB GLOBAL Variables *************/
-    UserInfoDB userinfoDB = null;
-    /************* Room DB GLOBAL Variables *************/
+    /************* SERVER API GLOBAL Variables *************/
+    String SB = "12";
+
+    /************* SERVER API GLOBAL Variables *************/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d("SERVERTEST", SB);
 
 
         btnLogin = findViewById(R.id.buttonLogin);
@@ -72,61 +77,11 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         SharedPreferences.Editor editor;
         Auto_LogIn = (CheckBox) findViewById(R.id.check);
         setting = getSharedPreferences("setting", 0);
-        editor= setting.edit();
-
-        /************* Room DB CREATE START *************/
-        userinfoDB = UserInfoDB.getInstance(this);
-        UserInfoDB Infodb = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
-        UserInfoDao userinfoDao = Infodb.UserinfoDao();
-        /************* Room DB CREATE END *************/
-
-        /************* Canvas API CREATE START *************/
-
-
-
-        userCallback = new UserCallback(MainActivity.this) {
-
-            @Override
-            public void cachedUser(User user) {
-                APIHelpers.setCacheUser(MainActivity.this, user);
-            }
-
-            @Override
-            public void user(User user, Response response) {
-                userId = user.getLoginId();
-                userName = user.getName();
-
-                class InsertRunnable2 implements Runnable {
-                    @Override
-                    public void run() {
-                        UserInfo userinfoTemp = new UserInfo();
-                        userinfoTemp.userTOKEN = TOKEN;
-                        userinfoTemp.userId = userId;
-                        userinfoTemp.userName = userName;
-                        userinfoDB.UserinfoDao().insert(userinfoTemp);
-                    }
-                }
-
-                InsertRunnable2 insertRunnable2 = new InsertRunnable2();
-                Thread addThread2 = new Thread(insertRunnable2);
-                addThread2.start();
-
-
-
-                //login success
-                Intent intent = new Intent(MainActivity.this, Home_page.class);
-                intent.putExtra("TOKEN", TOKEN);
-                startActivity(intent);
-//                isCallbackFinished
-
-            }
-        };
-        /************* Canvas API CREATE END*************/
-
-        if(setting.getString("TOKEN",null) != null) {
-
+        editor = setting.edit();
+//        getJson();
+        if (setting.getString("TOKEN", null) != null) {
             Intent intent = new Intent(MainActivity.this, Home_page.class);
-            intent.putExtra("TOKEN",setting.getString("TOKEN",""));
+            intent.putExtra("TOKEN", setting.getString("TOKEN", ""));
             startActivity(intent);
         }
 
@@ -134,15 +89,11 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         Auto_LogIn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // TODO Auto-generated method stub
-                if(isChecked){
-
+                if (isChecked) {
                     String TOKEN = editTextToken.getText().toString();
                     editor.putString("TOKEN", TOKEN);
-                   // editor.putBoolean("Auto_Login_enabled", true);
                     editor.apply();
-                }
-                else{
+                } else {
                     editor.clear();
                     editor.apply();
                 }
@@ -154,18 +105,17 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
 
                 TOKEN = editTextToken.getText().toString();
                 //Set up CanvasAPI
-                if(!TOKEN.equals("")){
-                setUpCanvasAPI();
-                UserAPI.getSelf(userCallback);}
-                else{
-                    Toast toast = Toast.makeText(getApplicationContext(),"Please Enter TOKEN",Toast.LENGTH_SHORT);
+                if (TOKEN.equals("")) {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Please Enter TOKEN", Toast.LENGTH_SHORT);
                     toast.show();
+                } else {
+                    Intent intent = new Intent(MainActivity.this, Home_page.class);
+                    intent.putExtra("TOKEN", setting.getString("TOKEN", ""));
+                    startActivity(intent);
                 }
 
             }
         });
-       
-
 
         /************* Channel creation for Notification START *************/
         CharSequence name = getString(R.string.channel_name);
@@ -178,8 +128,43 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
         /************* Channel creation for Notification END *************/
+//        /************* Example of Background Service *************/
+//        /* service start */
+//        Intent startIntent = new Intent(this, BackgroundService.class);
+//        id="testId";
+//        pwd="testPwd";
+//        startIntent.putExtra("id",id);
+//        startIntent.putExtra("pwd",pwd);
+//        startService(startIntent);
+//        /* service terminate */
+//        /* how to quit background service */
+//        /*testBtn.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
+//                stopService(intent);
+//            }
+//        });*/
+//        /************* Example of Background Service *************/
 
-
+        /************* Example of Background Service *************/
+        /* service start */
+//        Intent startIntent = new Intent(this, BackgroundService.class);
+//        id="testId";
+//        pwd="testPwd";
+//        startIntent.putExtra("id",id);
+//        startIntent.putExtra("pwd",pwd);
+//        startService(startIntent);
+        /* service terminate */
+        /* how to quit background service */
+        /*testBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,BackgroundService.class);
+                stopService(intent);
+            }
+        });*/
+        /************* Example of Background Service *************/
 
 
         /************* Notification builder creation for Notification *************/
@@ -216,58 +201,47 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         //In a real application, this should probably be a standalone class.
         APIHelpers.setDefaultErrorDelegateClass(this, this.getClass().getName());
     }
-    @Override
-    public void onCallbackStarted() {
-        btnLogin.setEnabled(false);
-    }
-
-    @Override
-    public void onCallbackFinished(CanvasCallback.SOURCE source) {
-        if(userId==null){
-            Toast toast = Toast.makeText(getApplicationContext(),"INVALID TOKEN",Toast.LENGTH_SHORT);
-            toast.show();
-        }
-        btnLogin.setEnabled(true);
-
-    }
-
-    @Override
-    public void onNoNetwork() {
-
-    }
-
-    @Override
-    public Context getContext() {
-        return this;
-    }
-
-    @Override
-    public void noNetworkError(RetrofitError retrofitError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "There was no network");
-
-    }
-
-    @Override
-    public void notAuthorizedError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 401");
-
-    }
-
-    @Override
-    public void invalidUrlError(RetrofitError retrofitError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 404");
-
-    }
-
-    @Override
-    public void serverError(RetrofitError retrofitError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 500");
-
-    }
-
-    @Override
-    public void generalError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
-        Log.d(APIHelpers.LOG_TAG, "HTTP 200 but something went wrong. Probably a GSON parse error.");
-
-    }
+//    @Override
+//    public void onCallbackStarted() {
+//        btnLogin.setEnabled(false);
+//    }
+//
+//    @Override
+//    public void onCallbackFinished(CanvasCallback.SOURCE source) {
+//        if(userId==null){
+//            Toast toast = Toast.makeText(getApplicationContext(),"INVALID TOKEN",Toast.LENGTH_SHORT);
+//            toast.show();
+//        }
+//        btnLogin.setEnabled(true);
+//
+//    }
+//
+//    @Override
+//    public void onNoNetwork() {
+//
+//    }
+//
+//    @Override
+//    public Context getContext() {
+//        return this;
+//    }
+//
+//    @Override
+//    public void noNetworkError(RetrofitError retrofitError, Context context) {
+//        Log.d(APIHelpers.LOG_TAG, "There was no network");
+//
+//    }
+//
+//    @Override
+//    public void notAuthorizedError(RetrofitError retrofitError, CanvasError canvasError, Context context) {
+//        Log.d(APIHelpers.LOG_TAG, "HTTP 401");
+//
+//    }
+//
+//    @Override
+//    public void invalidUrlError(RetrofitError retrofitError, Context context) {
+//        Log.d(APIHelpers.LOG_TAG, "HTTP 404");
+//
+//    }
+//
 }

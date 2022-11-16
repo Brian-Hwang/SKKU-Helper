@@ -32,4 +32,8 @@ public interface SKKUAssignmentDao {
 
     @Query("DELETE FROM SKKUAssignment")
     void nukeTable();
+
+    @Query("SELECT COUNT(SKKUAssignment.assignmentId) FROM SKKUAssignment")
+    int getRowCount();
+
 }
