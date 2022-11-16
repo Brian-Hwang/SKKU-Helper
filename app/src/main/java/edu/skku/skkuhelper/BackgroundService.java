@@ -103,11 +103,11 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
             /****테스트용****/
-//            else if (alarmType!=0){
-//                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-//                tmp.isAlarm=0;
-//                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-//            }
+            else if (alarmType!=0){
+                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
+                tmp.isAlarm=0;
+                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
+            }
             /****테스트용****/
         }
     }
@@ -119,7 +119,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 //        Intent intent = new Intent(this, MainActivity.class);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 //        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
+        Log.d("alarm","send");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
@@ -261,10 +261,10 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 getAssignments();
                 checkAlarm();
                 /************* Put functions here *************/
-                handler.postDelayed(runnable, 30000);    //min*60000, 30min=>1800000
+                handler.postDelayed(runnable, 3600000);    //min*60000, 1 hr=>3600000
             }
         };
-        handler.postDelayed(runnable, 30000);
+        handler.postDelayed(runnable, 3600000);
     }
 
     @Override

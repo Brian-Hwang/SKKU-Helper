@@ -259,6 +259,9 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
             editor.clear();
             editor.commit();
             finishAffinity();
+
+            Intent intentBackground = new Intent(Home_page.this,BackgroundService.class);
+            stopService(intentBackground);
             /* erase user id, password.*/
             Intent intent = new Intent(Home_page.this, MainActivity.class);
             startActivity(intent);
