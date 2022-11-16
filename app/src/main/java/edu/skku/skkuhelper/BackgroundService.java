@@ -243,10 +243,10 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 
                 //checkAlarm();
                 /************* Put functions here *************/
-                handler.postDelayed(runnable, 10000);    //min*60000, 1 hr=>3600000
+                handler.postDelayed(runnable, 3600000);    //min*60000, 1 hr=>3600000
             }
         };
-        handler.postDelayed(runnable, 10000);
+        handler.postDelayed(runnable, 3600000);
     }
 
     @Override
