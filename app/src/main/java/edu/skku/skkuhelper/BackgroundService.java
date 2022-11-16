@@ -93,21 +93,27 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 sendAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
                 tmp.isAlarm = 0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-            } else if (alarmType == 2 && diff < 12) {
+            } else if (alarmType == 2 && diff < 24) {
                 sendAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
                 tmp.isAlarm = 0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-            } else if (alarmType == 3 && diff < 24) {
+            } else if (alarmType == 3 && diff < 48) {
                 sendAlarm(assignmentName, courseName + ": " + String.valueOf(diff) + " hours left", i);
                 tmp.isAlarm = 0;
                 SKKUassignmentDB.SKKUassignmentDao().update(tmp);
             }
             /****테스트용****/
-            else if (alarmType!=0){
-                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
-                tmp.isAlarm=0;
-                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
-            }
+//            if (alarmType!=0){
+//                Log.d("alarmtype",String.valueOf(alarmType));
+//                Log.d("alarmtype",String.valueOf(assignments.get(i).isAlarm));
+//                sendAlarm(assignmentName,courseName+": "+String.valueOf(diff)+" hours left",i);
+//                tmp.isAlarm=0;
+//                SKKUassignmentDB.SKKUassignmentDao().update(tmp);
+//                List<SKKUAssignment> updated=SKKUassignmentDB.SKKUassignmentDao().getAll();
+//                for (int j=0;j<updated.size();j++){
+//                    Log.d("isAlarm",String.valueOf(updated.get(j).isAlarm));
+//                }
+//            }
             /****테스트용****/
         }
     }
@@ -119,7 +125,6 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 //        Intent intent = new Intent(this, MainActivity.class);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 //        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-        Log.d("alarm","send");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
@@ -134,7 +139,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         // notificationId is a unique int for each notification that you must define
         notificationManagercompat.notify(id, builder.build());
         /************* Example of Notification *************/
-        Log.d("alarm", title);
+        //Log.d("alarm", title);
     }
 
     public void getbeforeAssignments() {
@@ -192,7 +197,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                     todoTemp.url = todo.getHtmlUrl();
                     todolist.add(todoTemp);
                 }
-                Log.d("size confirm", todolist.size() + "");
+                //Log.d("size confirm", todolist.size() + "");
             }
         };
         CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
@@ -226,6 +231,34 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     @Override
     public void onCreate() {
         ///Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
+
+        //
+        handler = new Handler();
+        runnable = new Runnable() {
+            public void run() {
+                /************* Put functions here *************/
+                //Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
+                getbeforeAssignments();
+                getAssignments();
+
+                //checkAlarm();
+                /************* Put functions here *************/
+                handler.postDelayed(runnable, 10000);    //min*60000, 1 hr=>3600000
+            }
+        };
+        handler.postDelayed(runnable, 10000);
+    }
+
+    @Override
+    public void onDestroy() {
+        handler.removeCallbacks(runnable);
+        //Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startid) {
+        //Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
+        startForegroundService();
         /************* Room DB CREATE START *************/
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
         userinfoDB = UserInfoDB.getInstance(this);
@@ -245,38 +278,11 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         Thread addThread = new Thread(insertRunnable);
         addThread.start();
 
-
         while (true) {
             if (TOKEN != null) break;
         }
         setUpCanvasAPI();
         /************* Canvas API CREATE END*************/
-        //
-        handler = new Handler();
-        runnable = new Runnable() {
-            public void run() {
-                /************* Put functions here *************/
-                //Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
-                getbeforeAssignments();
-                getAssignments();
-                checkAlarm();
-                /************* Put functions here *************/
-                handler.postDelayed(runnable, 3600000);    //min*60000, 1 hr=>3600000
-            }
-        };
-        handler.postDelayed(runnable, 3600000);
-    }
-
-    @Override
-    public void onDestroy() {
-        handler.removeCallbacks(runnable);
-        //Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startid) {
-        //Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
-        startForegroundService();
         //return super.onStartCommand(intent,flags,startid);
         //return Service.START_REDELIVER_INTENT;
         return START_STICKY;
@@ -307,7 +313,6 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 SKKUassignmentDB.SKKUassignmentDao().nukeTable();
                 for (todoClass todos : todolist) {
                     Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
-
                     SKKUAssignment todoTemp = new SKKUAssignment();
                     if (assignmentidList.containsKey(todos.assignmentId))
                         todoTemp.isAlarm = assignmentidList.get(todos.assignmentId);
@@ -329,6 +334,12 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
         InsertRunnable insertRunnable = new InsertRunnable();
         Thread addThread = new Thread(insertRunnable);
         addThread.start();
+        try {
+            addThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        checkAlarm();//
     }
 
     @Override

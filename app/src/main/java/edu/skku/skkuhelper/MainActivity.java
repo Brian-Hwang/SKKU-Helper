@@ -189,19 +189,19 @@ public class MainActivity extends AppCompatActivity implements APIStatusDelegate
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
+        /*NotificationCompat.Builder builder = new NotificationCompat.Builder(this, String.valueOf(R.string.CHANNEL_ID))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("ICAMPUS NOTIFICATION")
                 .setContentText("Software Engineering lectrue due 10.03")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE);
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE);*/
         /************* Notification builder creation for Notification *************/
 
 
         /************* Example of Notification *************/
-        NotificationManagerCompat notificationManagercompat = NotificationManagerCompat.from(this);
+        /*NotificationManagerCompat notificationManagercompat = NotificationManagerCompat.from(this);
         // notificationId is a unique int for each notification that you must define
-        notificationManagercompat.notify(1, builder.build());
+        notificationManagercompat.notify(1, builder.build());*/
         /************* Example of Notification *************/
     }
 
