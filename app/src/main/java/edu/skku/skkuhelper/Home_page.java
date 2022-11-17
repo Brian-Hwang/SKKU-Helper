@@ -6,6 +6,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,7 +44,16 @@ import com.instructure.canvasapi.utilities.CanvasRestAdapter;
 import com.instructure.canvasapi.utilities.ErrorDelegate;
 import com.instructure.canvasapi.utilities.LinkHeaders;
 import com.instructure.canvasapi.utilities.UserCallback;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -67,6 +77,8 @@ import retrofit.client.Response;
 public class Home_page extends AppCompatActivity implements APIStatusDelegate, ErrorDelegate, NavigationView.OnNavigationItemSelectedListener {
     private long time = 0;
     NavigationView navigationView;
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
     /************* Canvas API GLOBAL Variables *************/
     private AppBarConfiguration appBarConfiguration;
     public final static String DOMAIN = "https://canvas.skku.edu/";
@@ -88,6 +100,9 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     /************* Room DB GLOBAL Variables *************/
     SKKUAssignmentDB SKKUassignmentDB = null;
     UserInfoDB userinfoDB = null;
+    SKKUNoticeDB SKKUnoticeDB = null;   //notice_room
+    List<SKKUNotice> notices;
+
     /************* Room DB GLOBAL Variables *************/
 
 
@@ -102,6 +117,8 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         UserInfoDB infoDB = Room.databaseBuilder(getApplicationContext(), UserInfoDB.class, "userifo.db").build();
         UserInfoDao userInfoDao = infoDB.UserinfoDao();
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
+        SKKUnoticeDB = SKKUNoticeDB.getInstance(this);  //notice_room
+        notices = SKKUnoticeDB.SKKUnoticeDao().getAll();
         /************* Room DB CREATE END *************/
         setContentView(R.layout.activity_navigation_menu);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -199,6 +216,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                 CourseAPI.getFirstPageFavoriteCourses(courseCanvasCallback);
                 ToDoAPI.getUserTodos(todosCanvasCallback);
                 UserAPI.getSelf(userCallback);
+                getJson();
                 break;
             }
 
@@ -310,6 +328,107 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         return true;
     }
 
+    public void getJson() {
+        Log.d("servertest","asdf");
+        try {
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                    .url("http://13.124.68.141:8000/notice/get_all" +
+                            "?student_id=2022310000&tag_num=2&type=2")
+                    .addHeader("auth", "myAuth")
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    Log.d("SERVERTEST", request.toString());
+                    Log.d("SERVERTEST", e.toString());
+
+
+                }
+
+                //
+                public void LogLineBreak(String str) {
+                    if (str.length() > 3000) {    // 텍스트가 3000자 이상이 넘어가면 줄
+                        Log.d("servertest", str.substring(0, 3000));
+                        LogLineBreak(str.substring(3000));
+                    } else {
+                        Log.e("servertest", str);
+                    }
+                }
+                //
+
+                @Override
+                public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+                    String rbd = response.body().string();
+
+                    //LogLineBreak(rbd);
+                    //LogLineBreak(response.body().string());
+                    //Log.d("SERVERTEST", response.body().string());
+                    new Handler(getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+
+                                JSONObject jsonObject = new JSONObject(rbd);
+                                //JSONObject jsonObject = new JSONObject(response.body().string());
+                                JSONArray jsonArray = jsonObject.getJSONArray("data");
+                                Log.d("servertest",String.valueOf(jsonArray.length()));
+                                for (int i=0; i<jsonArray.length();i++) {
+                                    SKKUNotice noticetemp = new SKKUNotice();
+                                    JSONObject jsobj = jsonArray.getJSONObject(i);
+                                    noticetemp.noticeId = jsobj.getLong("id_server_notice");
+                                    //String idstr = String.valueOf(noticeid);
+                                    //Log.d("servertest", "this is data whose id is "+idstr+" and index is "+String.valueOf(i));
+                                    SKKUNotice noticebefore = SKKUnoticeDB.SKKUnoticeDao().getById(noticetemp.noticeId);
+                                    //기존아이디가 있으면 체크넘버 0으로 갱신
+                                    if(noticebefore!=null) {
+                                        //noticebefore.check = 0;
+                                        SKKUnoticeDB.SKKUnoticeDao().update(noticebefore);
+
+                                    } else { //없으면 체크넘버 1로 받음
+
+                                        noticetemp.title = jsobj.getString("title");
+                                        noticetemp.sum = jsobj.getString("summary");
+                                        noticetemp.tag = jsobj.getInt("tag_num");
+                                        noticetemp.watch = jsobj.getInt("watch");
+                                        noticetemp.writer = jsobj.getString("writer");
+                                        noticetemp.link = jsobj.getString("link");
+                                        noticetemp.check = 1;
+                                        LogLineBreak(noticetemp.title); //test용
+                                        Log.d("severtest",String.valueOf(noticetemp.check)); //test용
+                                        noticetemp.date = formatter.parse(jsobj.getString("date")); //실제 사용할 date
+                                        SKKUnoticeDB.SKKUnoticeDao().insert(noticetemp);
+
+
+                                    }
+
+
+
+
+
+                                }
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    });
+
+
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     /**
      * This is all stuff that should only need to be called once for the entire project.
@@ -384,84 +503,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
     @Override
     public void onCallbackStarted() {
     }
-
-//    @Override
-//    public void onCallbackFinished(CanvasCallback.SOURCE source) {
-//        Log.d("BEFOREASSIGNMENT1", String.valueOf(assignmentidList.size()));
-//        if (courseCanvasCallback.isFinished()) {
-//            Log.d("APICALLBACK1", source.name());
-//            for (todoClass todos : todolist) {
-//                Log.d("TODO LIST : ", String.valueOf(todos.assignmentName) + String.valueOf(todos.courseName) + String.valueOf(todos.assignmentId) + String.valueOf(todos.courseId) + String.valueOf(todos.isLecture) + String.valueOf(todos.dueDate) + String.valueOf(todos.url));
-//
-//                class InsertRunnable implements Runnable {
-//                    @Override
-//                    public void run() {
-//                        SKKUAssignment todoTemp = new SKKUAssignment();
-//                        Log.d("BEFOREASSIGNMENT2", String.valueOf(todos.assignmentId));
-//                        Log.d("BEFOREASSIGNMENT3", String.valueOf(assignmentidList.get(todos.assignmentId)));
-//
-//                        if (assignmentidList.containsKey(todos.assignmentId) &&assignmentidList.get(todos.assignmentId)!=null )
-//                            todoTemp.isAlarm = assignmentidList.get(todos.assignmentId);
-//                        else
-//                            todoTemp.isAlarm = 3;
-//
-//                        todoTemp.isLecture = todos.isLecture;
-//                        todoTemp.assignmentName = todos.assignmentName;
-//                        todoTemp.courseName = todos.courseName;
-//                        todoTemp.assignmentId = todos.assignmentId;
-//                        todoTemp.courseId = todos.courseId;
-//                        todoTemp.dueDate = todos.dueDate;
-//                        todoTemp.url = todos.url;
-//                        SKKUassignmentDB.SKKUassignmentDao().insert(todoTemp);
-//                        while(true) {
-//                            Log.d("HERERERERE", SKKUassignmentDB.SKKUassignmentDao().getRowCount() + "" + todolist.size());
-//                            if (SKKUassignmentDB.SKKUassignmentDao().getRowCount() == todolist.size()){
-//                                isCallbackFinished = true;
-//                                break;
-//                            }
-//                        }
-//                    }
-//
-//                }
-//
-//                InsertRunnable insertRunnable = new InsertRunnable();
-//                Thread addThread = new Thread(insertRunnable);
-//                addThread.start();
-//            }
-//            while(true){
-//                if(isCallbackFinished){
-//                    Log.d("CALLBACKFINISHED","TRUE");
-//                    manager.beginTransaction().replace(R.id.content_main, new BlankFragment()).commit();
-//                    break;
-//                }
-//            }
-//        }
-//        if (userId != null) {
-//            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-//            Log.d("APICALLBACK2", source.name());
-//            class InsertRunnable2 implements Runnable {
-//                @Override
-//                public void run() {
-//                    UserInfo userinfoTemp = new UserInfo();
-//                    userinfoTemp.userTOKEN = TOKEN;
-//                    userinfoTemp.userId = userId;
-//                    userinfoTemp.userName = userName;
-//                    userinfoDB.UserinfoDao().insert(userinfoTemp);
-//                    runOnUiThread(() -> {
-//                        View view = navigationView.getHeaderView(0);
-//                        TextView textView1 = view.findViewById(R.id.textView);
-//                        TextView textView2 = view.findViewById(R.id.studentName);
-//                        textView1.setText(userId);
-//                        textView2.setText(userName);
-//                    });
-//                }
-//            }
-//
-//            InsertRunnable2 insertRunnable2 = new InsertRunnable2();
-//            Thread addThread2 = new Thread(insertRunnable2);
-//            addThread2.start();
-//        }
-//    }
 @Override
 public void onCallbackFinished(CanvasCallback.SOURCE source) {
     Log.d("BEFOREASSIGNMENT1", String.valueOf(assignmentidList.size()));
