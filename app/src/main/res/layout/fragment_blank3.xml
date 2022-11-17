@@ -47,6 +47,15 @@
             android:clickable="true"
             android:layout_height="match_parent"
             android:padding="10dp"/>
+        <TextView
+            android:id="@+id/Empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="170dp"
+            android:text="해당하는 공지가 없습니다."
+            android:gravity="center">
+
+        </TextView>
     </LinearLayout>
 
 </FrameLayout>
