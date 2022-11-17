@@ -166,7 +166,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 
             Request request = new Request.Builder()
                     .url("http://13.124.68.141:8000/notice/get_all" +
-                            "?student_id=2022310000&tag_num=0&type=0")
+                            "?student_id=2022310000&tag_num=2&type=2")
                     .addHeader("auth", "myAuth")
                     .addHeader("Content-Type", "application/json")
                     .build();
