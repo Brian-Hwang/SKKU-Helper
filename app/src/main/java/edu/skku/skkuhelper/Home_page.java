@@ -188,7 +188,6 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                     todoTemp.url = todo.getHtmlUrl();
                     todolist.add(todoTemp);
                 }
-                Log.d("size confirm", todolist.size() + "");
             }
         };
 
@@ -295,13 +294,14 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         else if (id == R.id.nav_logout) {
             editor.clear();
             editor.commit();
-            finishAffinity();
 
-            Intent intentBackground = new Intent(Home_page.this,BackgroundService.class);
-            stopService(intentBackground);
+
+            //Intent intentBackground = new Intent(Home_page.this,BackgroundService.class);
+            //stopService(intentBackground);
             /* erase user id, password.*/
             Intent intent = new Intent(Home_page.this, MainActivity.class);
             startActivity(intent);
+            finish();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

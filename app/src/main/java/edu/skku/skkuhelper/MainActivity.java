@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity{
                     Intent intent = new Intent(MainActivity.this, Home_page.class);
                     intent.putExtra("TOKEN", editTextToken.getText().toString());
                     startActivity(intent);
+                    finish();
                 }
 
             }
