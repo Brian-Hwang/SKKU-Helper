@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity{
         if(setting.getString("TOKEN",null) != null) {
 
             Intent intent = new Intent(MainActivity.this, Home_page.class);
+            finish();
             intent.putExtra("TOKEN",setting.getString("TOKEN",""));
             startActivity(intent);
         }
@@ -79,10 +80,8 @@ public class MainActivity extends AppCompatActivity{
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // TODO Auto-generated method stub
                 if(isChecked){
-
                     String TOKEN = editTextToken.getText().toString();
                     editor.putString("TOKEN", TOKEN);
-                   // editor.putBoolean("Auto_Login_enabled", true);
                     editor.apply();
                 }
                 else{
@@ -102,10 +101,11 @@ public class MainActivity extends AppCompatActivity{
                     toast.show();
                 } else {
                     Log.d("asdf","main");
+                    finish();
                     Intent intent = new Intent(MainActivity.this, Home_page.class);
                     intent.putExtra("TOKEN", editTextToken.getText().toString());
                     startActivity(intent);
-                    finish();
+
                 }
 
             }
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity{
 
 
         /************* Channel creation for Notification START *************/
-        CharSequence name = getString(R.string.channel_name);
+/*        CharSequence name = getString(R.string.channel_name);
         String description = getString(R.string.channel_description);
         int importance = NotificationManager.IMPORTANCE_DEFAULT;
         NotificationChannel channel = new NotificationChannel(String.valueOf(R.string.CHANNEL_ID), name, importance);
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity{
         // Register the channel with the system; you can't change the importance
         // or other notification behaviors after this
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
+        notificationManager.createNotificationChannel(channel);*/
         /************* Channel creation for Notification END *************/
 
 

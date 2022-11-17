@@ -99,6 +99,7 @@ public class ListViewAdapter_LR extends BaseAdapter {
         if(items.get(i).isAlarm == 0) {
             Drawable drawable = view.getResources().getDrawable(R.drawable.ic_baseline_notifications_none_24);
             btn.setImageDrawable(drawable);
+            textViewAlarm.setText("");
         }
         else {
             Drawable drawable = view.getResources().getDrawable(R.drawable.ic_baseline_notifications_24);
