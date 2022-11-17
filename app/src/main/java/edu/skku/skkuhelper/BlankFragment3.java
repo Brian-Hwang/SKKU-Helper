@@ -46,6 +46,7 @@ public class BlankFragment3 extends Fragment {
     int tag = -1;
     String[] sortList = {"최신순", "조회순"};
     String sort = "최신순";
+    String[] weekday = {"일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"};
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -143,19 +144,20 @@ public class BlankFragment3 extends Fragment {
             public void onClick(View view) {
                 items = new ArrayList<Notice>();
                 for(int count = 0; count < noticeList.size(); count++) {
+                    String Deadline =  (1900 + noticeList.get(count).date.getYear()) + "년 " + (noticeList.get(count).date.getMonth() + 1) + "월 " + (noticeList.get(count).date.getDate()) + "일 " + weekday[noticeList.get(count).date.getDay()];
                     if(tag == -1) {
-                        items.add(new Notice(String.valueOf(noticeList.get(count).title), (String.valueOf(noticeList.get(count).writer)), String.valueOf(noticeList.get(count).date), noticeList.get(count).link, noticeList.get(count).watch, noticeList.get(count).sum));
+                        items.add(new Notice(String.valueOf(noticeList.get(count).title), (String.valueOf(noticeList.get(count).writer)), Deadline, noticeList.get(count).link, noticeList.get(count).watch, noticeList.get(count).sum));
                         continue;
                     }
                     if(noticeList.get(count).tag == tag) {
-                        items.add(new Notice(String.valueOf(noticeList.get(count).title), (String.valueOf(noticeList.get(count).writer)), String.valueOf(noticeList.get(count).date), noticeList.get(count).link, noticeList.get(count).watch, noticeList.get(count).sum));
+                        items.add(new Notice(String.valueOf(noticeList.get(count).title), (String.valueOf(noticeList.get(count).writer)), Deadline, noticeList.get(count).link, noticeList.get(count).watch, noticeList.get(count).sum));
                     }
 
                 }
                 if(sort == "조회순") {
                     Collections.sort(items, sortByTotalCall);
-                    Collections.reverse(items);
                 }
+                Collections.reverse(items);
                 listViewAdapter = new ListViewAdapter_Notification(items, getActivity().getApplicationContext());
                 listView.setAdapter(listViewAdapter);
                 listView.setEmptyView(text);

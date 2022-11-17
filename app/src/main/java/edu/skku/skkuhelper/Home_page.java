@@ -284,7 +284,7 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
                 return;
             }
             if (System.currentTimeMillis() <= time + 2000) {
-                finishAffinity();
+                finish();
                 toast.cancel();
             }
         }
@@ -313,11 +313,9 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
         else if (id == R.id.nav_logout) {
             editor.clear();
             editor.commit();
+            Intent intentBackground = new Intent(Home_page.this,BackgroundService.class);
+            stopService(intentBackground);
 
-
-            //Intent intentBackground = new Intent(Home_page.this,BackgroundService.class);
-            //stopService(intentBackground);
-            /* erase user id, password.*/
             Intent intent = new Intent(Home_page.this, MainActivity.class);
             startActivity(intent);
             finish();
