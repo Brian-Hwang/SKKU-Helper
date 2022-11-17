@@ -2,6 +2,7 @@ package edu.skku.skkuhelper;
 
 import static java.lang.Thread.sleep;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -348,14 +349,24 @@ public class Home_page extends AppCompatActivity implements APIStatusDelegate, E
 
     @Override
     protected void onDestroy() {
-                /************* Example of Background Service *************/
+        /************* Example of Background Service *************/
         /* service start */
-        Intent startIntent = new Intent(this, BackgroundService.class);
-        startForegroundService(startIntent);
+        if(!isServiceRunning("edu.skku.skkuhelper.BackgroundService")){
+            Intent startIntent = new Intent(this, BackgroundService.class);
+            startForegroundService(startIntent);
+        }
         /************* Example of Background Service *************/
         super.onDestroy();
     }
-
+    public Boolean isServiceRunning(String serviceName) {
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo runningServiceInfo : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceName.equals(runningServiceInfo.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     protected void onResume() {
 //        stopService(new Intent(Home_page.this,BackgroundService.class));

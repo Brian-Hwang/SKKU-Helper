@@ -166,7 +166,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
 
             Request request = new Request.Builder()
                     .url("http://13.124.68.141:8000/notice/get_all" +
-                            "?student_id=2022310000&tag_num=0&type=0")
+                            "?student_id=2022310000&tag_num=2&type=2")
                     .addHeader("auth", "myAuth")
                     .addHeader("Content-Type", "application/json")
                     .build();
@@ -416,10 +416,10 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
                 checkNotice();
                 //checkAlarm();
                 /************* Put functions here *************/
-                handler.postDelayed(runnable, 1000);    //min*60000, 1 hr=>3600000
+                handler.postDelayed(runnable, 3600000);    //min*60000, 1 hr=>3600000
             }
         };
-        handler.postDelayed(runnable, 1000);
+        handler.postDelayed(runnable, 3600000);
     }
 
     @Override
@@ -431,6 +431,7 @@ public class BackgroundService extends Service implements APIStatusDelegate, Err
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
         //Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
+        Log.d("asdfg","bg");
         startForegroundService();
         /************* Room DB CREATE START *************/
         SKKUassignmentDB = SKKUAssignmentDB.getInstance(this);
