@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity{
                 } else {
                     Log.d("asdf","main");
                     Intent intent = new Intent(MainActivity.this, Home_page.class);
-                    intent.putExtra("TOKEN", setting.getString("TOKEN", ""));
+                    intent.putExtra("TOKEN", editTextToken.getText().toString());
                     startActivity(intent);
                 }
 
