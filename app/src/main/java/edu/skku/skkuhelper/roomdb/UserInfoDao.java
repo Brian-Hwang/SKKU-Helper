@@ -22,7 +22,7 @@ public interface UserInfoDao {
     List<UserInfo> loadAllByIds(int[] userTOKENs);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(UserInfo SKKUAssignments);
+    void insert(UserInfo userinfos);
 
     @Update
     void update(UserInfo userinfos);

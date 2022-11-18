@@ -96,6 +96,7 @@ public class BlankFragment extends Fragment {
         listView = v.findViewById(R.id.listViewIcampus);
         Button btn1 = v.findViewById(R.id.buttonLecture);
         Button btn2 = v.findViewById(R.id.buttonAssignment);
+        TextView text = v.findViewById(R.id.Empty2);
 //        btn1.setEnabled(false);
 //        btn2.setEnabled(false);
         SKKUAssignmentDB db = Room.databaseBuilder(getActivity().getApplicationContext(), SKKUAssignmentDB.class, "SKKUassignment.db").build();
@@ -128,6 +129,8 @@ public class BlankFragment extends Fragment {
                     items1.sort(sortByTotalCall);
                     listViewAdapter = new ListViewAdapter_LR(items1, getActivity().getApplicationContext(), icampusList);
                     listView.setAdapter(listViewAdapter);
+                    text.setText("남은 강의가 없습니다!");
+                    listView.setEmptyView(text);
                 }
             }
         });
@@ -146,6 +149,8 @@ public class BlankFragment extends Fragment {
                     items2.sort(sortByTotalCall);
                     listViewAdapter = new ListViewAdapter_LR(items2, getActivity().getApplicationContext(), icampusList);
                     listView.setAdapter(listViewAdapter);
+                    text.setText("남은 과제가 없습니다!");
+                    listView.setEmptyView(text);
             }
             }
         });

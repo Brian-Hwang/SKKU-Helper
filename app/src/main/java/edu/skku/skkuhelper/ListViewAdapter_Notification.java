@@ -21,16 +21,14 @@ class Notice {
     public String name;
     public String date;
     public String link;
-    //public int hits;
-    public boolean bookmark;
+    public int watch;
     public String summary;
-    public Notice(String title, String name, String date, String link, boolean bookmark, String summary) {
+    public Notice(String title, String name, String date, String link, int watch, String summary) {
         this.title = title;
         this.name = name;
         this.date = date;
         this.link = link;
-        //this.hits = hits;
-        this.bookmark = bookmark;
+        this.watch = watch;
         this.summary = summary;
     }
 }
@@ -63,17 +61,18 @@ public class ListViewAdapter_Notification extends BaseAdapter {
                 LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 view = layoutInflater.inflate(R.layout.notification_part, viewGroup, false);
             }
-
             TextView textViewTitle = view.findViewById(R.id.textViewtitle2);
             TextView textViewName = view.findViewById(R.id.textViewName);
             TextView textViewDate = view.findViewById(R.id.textViewDate);
+            TextView textViewWatch = view.findViewById(R.id.textViewHits);
             TextView textViewSummary = view.findViewById(R.id.textViewSummary);
             ToggleButton btn1 = view.findViewById(R.id.alarmToggle);
 
             textViewSummary.setVisibility(View.GONE);
             textViewTitle.setText(items.get(i).title);
-            textViewName.setText(items.get(i).name);
-            textViewDate.setText(items.get(i).date);
+            textViewName.setText("글쓴이: " + items.get(i).name);
+            textViewDate.setText("작성일: " + items.get(i).date);
+            textViewWatch.setText("조회수: " + items.get(i).watch);
 
             btn1.setOnCheckedChangeListener(
                     new CompoundButton.OnCheckedChangeListener() {

@@ -92,13 +92,14 @@ public class ListViewAdapter_LR extends BaseAdapter {
         Date currentDate = new Date();
         //Log.d("hours", " " + items.get(i).dueDate.getHours() + ":" + items.get(i).dueDate.getMinutes() + ":" + items.get(i).dueDate.getSeconds());
         long diffDay=(items.get(i).dueDate.getTime()-currentDate.getTime())/(24*60*60*1000);
-        long diffHours=(items.get(i).dueDate.getTime()-currentDate.getTime())/(60*60*1000);
+        long diffHours=((items.get(i).dueDate.getTime()-currentDate.getTime())/(60*60*1000)) % 24;
 
         textViewDeadline2.setText(diffDay + "일, " +diffHours + "시간 남음");
 
         if(items.get(i).isAlarm == 0) {
             Drawable drawable = view.getResources().getDrawable(R.drawable.ic_baseline_notifications_none_24);
             btn.setImageDrawable(drawable);
+            textViewAlarm.setText("");
         }
         else {
             Drawable drawable = view.getResources().getDrawable(R.drawable.ic_baseline_notifications_24);

@@ -13,18 +13,23 @@ import java.util.List;
 public interface SKKUNoticeDao {
     @Query("SELECT * FROM SKKUNotice")
     List<SKKUNotice> getAll();
-	//여기 코드수정해야
+
 
     @Query("SELECT * FROM SKKUNotice WHERE noticeid IN (:noticeids)")
     List<SKKUNotice> loadAllByIds(int[] noticeids);
-	
+
+    @Query("SELECT * FROM SKKUNotice WHERE SKKUNotice.noticeId == :noticeid")
+    SKKUNotice getById(long noticeid);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(SKKUNotice SKKUNotices);
+    void insert(SKKUNotice SKKUNotices);
 
     @Update
     void update(SKKUNotice notices);
 
     @Delete
     void delete(SKKUNotice notices);
-	//
+
+    @Query("DELETE FROM SKKUNotice")
+    void nukeTable();
 }

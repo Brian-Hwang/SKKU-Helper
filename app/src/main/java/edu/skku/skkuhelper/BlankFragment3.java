@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.room.Room;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,15 +14,21 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.ToggleButton;
+import android.widget.TextView;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+
+import edu.skku.skkuhelper.roomdb.SKKUAssignmentDB;
+import edu.skku.skkuhelper.roomdb.SKKUAssignmentDao;
+import edu.skku.skkuhelper.roomdb.SKKUNotice;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDB;
+import edu.skku.skkuhelper.roomdb.SKKUNoticeDao;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,11 +40,13 @@ public class BlankFragment3 extends Fragment {
     private ArrayList<Notice> items;
     private ListViewAdapter_Notification listViewAdapter;
     private ListView listView;
+    private List<SKKUNotice> noticeList;
     //tag example
-    String[] tagList = {"전체", "장학", "진로", "취업", "지원"};
-    String tag = "전체";
+    String[] tagList = {"전체", "학사", "입학", "취업", "채용/모집", "장학", "행사/세미나", "일반", "소프트웨어대학_학부", "소프트웨어대학_일반", "소프트웨어대학_대학원"};
+    int tag = -1;
     String[] sortList = {"최신순", "조회순"};
     String sort = "최신순";
+    String[] weekday = {"일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"};
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -78,6 +87,7 @@ public class BlankFragment3 extends Fragment {
         }
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -87,27 +97,35 @@ public class BlankFragment3 extends Fragment {
         Spinner spinner2 = v.findViewById(R.id.spinner2);
         Spinner spinner3 = v.findViewById(R.id.spinner3);
         Button btn = v.findViewById(R.id.buttonApply);
+        TextView text = v.findViewById(R.id.Empty);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_dropdown_item, tagList);
         spinner2.setAdapter(adapter);
         ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_dropdown_item, sortList);
         spinner3.setAdapter(adapter2);
 
+        SKKUNoticeDB db = Room.databaseBuilder(getActivity().getApplicationContext(), SKKUNoticeDB.class, "SKKUNotice.db").build();
+        SKKUNoticeDao noticeDao = db.SKKUnoticeDao();
 
-        //example
-        String sum = "This is summary!";
-        String link = "https://www.skku.edu/skku/index.do";
-        String link2 = "https://icampus.skku.edu/";
-        //example
-        items = new ArrayList<Notice>();
+        class InsertRunnable implements Runnable {
+            @Override
+            public void run() {
+                noticeList = noticeDao.getAll();
+
+            }
+        }
+
+        InsertRunnable insertRunnable = new InsertRunnable();
+        Thread addThread = new Thread(insertRunnable);
+        addThread.start();
+
         spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                tag = tagList[i];
+                tag = i - 1;
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-
             }
         });
         spinner3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -124,12 +142,25 @@ public class BlankFragment3 extends Fragment {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //example
-                items.add(new Notice("공지제목1", "글쓴이1", "2020-01-01", link, true, sum));
-                items.add(new Notice("공지제목2", "글쓴이2", "2021-01-01", link2, true, sum));
-                items.add(new Notice("공지제목3", "글쓴이3", "2021-01-01", link, true, sum));
+                items = new ArrayList<Notice>();
+                for(int count = 0; count < noticeList.size(); count++) {
+                    String Deadline =  (1900 + noticeList.get(count).date.getYear()) + "년 " + (noticeList.get(count).date.getMonth() + 1) + "월 " + (noticeList.get(count).date.getDate()) + "일 " + weekday[noticeList.get(count).date.getDay()];
+                    if(tag == -1) {
+                        items.add(new Notice(String.valueOf(noticeList.get(count).title), (String.valueOf(noticeList.get(count).writer)), Deadline, noticeList.get(count).link, noticeList.get(count).watch, noticeList.get(count).sum));
+                        continue;
+                    }
+                    if(noticeList.get(count).tag == tag) {
+                        items.add(new Notice(String.valueOf(noticeList.get(count).title), (String.valueOf(noticeList.get(count).writer)), Deadline, noticeList.get(count).link, noticeList.get(count).watch, noticeList.get(count).sum));
+                    }
+
+                }
+                if(sort == "조회순") {
+                    Collections.sort(items, sortByTotalCall);
+                }
+                Collections.reverse(items);
                 listViewAdapter = new ListViewAdapter_Notification(items, getActivity().getApplicationContext());
                 listView.setAdapter(listViewAdapter);
+                listView.setEmptyView(text);
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -140,8 +171,13 @@ public class BlankFragment3 extends Fragment {
             }
         });
 
-
-
         return v;
     }
+    private final static Comparator<Notice> sortByTotalCall = new Comparator<Notice>() {
+        @Override
+        public int compare(Notice o1, Notice o2) {
+            return Integer.compare(o1.watch, o2.watch);
+        }
+    };
+
 }
