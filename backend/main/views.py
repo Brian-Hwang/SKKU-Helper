@@ -46,10 +46,13 @@ def get_notice(request):
         type = request.GET['type']
         type = int(type)
         
+        print(int(tag))
+        print(tag)
+        
         result = []
         
         db = client.noticeDB
-        notice_collection = db.notice_tmp
+        notice_collection = db.notice_crawling
         student_collection = db.student
         new_notice = notice_collection.find({'id_server_notice' : {'$gt' : 2000}}).sort('id_server_notice',-1).limit(1)
         new_notice = list(new_notice)
