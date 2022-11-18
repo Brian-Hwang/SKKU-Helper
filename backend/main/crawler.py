@@ -10,7 +10,7 @@ import copy
 import logging
 from pymongo import MongoClient
 
-crawl_and_updateDB_interval = 30 * 60 # sec
+crawl_and_updateDB_interval = 60 * 60 # sec
 time_interval_get_notice_list_skku = 1 # sec
 time_interval_get_notice_summary_skku = 1 # sec
 time_interval_get_notice_summary_cs = 1 # sec
