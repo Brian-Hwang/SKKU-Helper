@@ -55,7 +55,7 @@ def get_notice(request):
         db = client.noticeDB
         notice_collection = db.notice_crawling
         student_collection = db.student
-        new_notice = notice_collection.find({'id_server_notice' : {'$gt' : 2000}}).sort('id_server_notice',-1).limit(1)
+        new_notice = notice_collection.find({'id_server_notice' : {'$gt' : 800}}).sort('id_server_notice',-1).limit(1)
         new_notice = list(new_notice)
         new_notice = new_notice[0]
         new_notice = new_notice['id_server_notice']
