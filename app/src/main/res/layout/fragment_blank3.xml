@@ -14,26 +14,21 @@
         <Spinner
             android:id="@+id/spinner2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:layout_weight="0.4"/>
+            android:layout_height="wrap_content"/>
         <Spinner
             android:id="@+id/spinner3"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:layout_weight="0.4"/>
+            android:layout_height="wrap_content"/>
 
 
         <Button
             android:id="@+id/buttonApply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Apply"
+            android:text="적용"
             android:textColor="@color/white"
             android:background="@color/lightgreen"
-            app:backgroundTint="@null"
-            android:layout_weight="0.2"/>
+            app:backgroundTint="@null"/>
 
     </LinearLayout>
     <LinearLayout
@@ -44,9 +39,20 @@
             android:id="@+id/listViewNotification"
             android:layout_width="match_parent"
             android:layout_marginTop="60dp"
+            android:dividerHeight="20dp"
+            android:divider="@color/white"
             android:clickable="true"
             android:layout_height="match_parent"
             android:padding="10dp"/>
+        <TextView
+            android:id="@+id/Empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="170dp"
+            android:text="해당하는 공지가 없습니다."
+            android:gravity="center">
+
+        </TextView>
     </LinearLayout>
 
 </FrameLayout>

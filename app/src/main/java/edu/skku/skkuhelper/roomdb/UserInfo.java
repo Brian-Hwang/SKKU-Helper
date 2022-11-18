@@ -11,4 +11,5 @@ public class UserInfo {
     public String userTOKEN;
     public String userId;
     public String userName;
+    public int usertag;
 }
