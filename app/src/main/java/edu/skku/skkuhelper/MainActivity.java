@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity{
 
 
         /************* Channel creation for Notification START *************/
-/*        CharSequence name = getString(R.string.channel_name);
+        CharSequence name = getString(R.string.channel_name);
         String description = getString(R.string.channel_description);
         int importance = NotificationManager.IMPORTANCE_DEFAULT;
         NotificationChannel channel = new NotificationChannel(String.valueOf(R.string.CHANNEL_ID), name, importance);
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity{
         // Register the channel with the system; you can't change the importance
         // or other notification behaviors after this
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);*/
+        notificationManager.createNotificationChannel(channel);
         /************* Channel creation for Notification END *************/
 
 
